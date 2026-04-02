@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Loader2, Trash2 } from "lucide-react";
+import { FileText, Plus, Loader2, Trash2, Download } from "lucide-react";
 import { formatCurrency, formatDate, dollarsToCents } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
@@ -209,6 +209,37 @@ export default function InvoicesPage() {
     }
   }
 
+  function exportCsv() {
+    const headers = ["Invoice #", "Customer", "Email", "Issued", "Due", "Amount", "Collected", "Status", "Memo"];
+    const rows = invoices.map((item) => [
+      item.invoiceDetails.invoiceNumber || "",
+      item.invoiceDetails.billedTo?.name || "",
+      item.invoiceDetails.billedTo?.email || "",
+      item.invoiceDetails.issuedAt || "",
+      item.invoiceDetails.dueAt || "",
+      ((item.invoiceDetails.lineItemsAndTotals?.totalAmountCents || 0) / 100).toFixed(2),
+      ((item.invoice.collectedAmountCents || 0) / 100).toFixed(2),
+      item.invoice.status || "",
+      item.invoiceDetails.memo || "",
+    ]);
+
+    const escape = (v: string) => {
+      if (v.includes(",") || v.includes('"') || v.includes("\n")) {
+        return `"${v.replace(/"/g, '""')}"`;
+      }
+      return v;
+    };
+
+    const csv = [headers, ...rows].map((row) => row.map(escape).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `invoices-${new Date().toISOString().split("T")[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div>
       {/* Header */}
@@ -217,10 +248,18 @@ export default function InvoicesPage() {
           <FileText className="h-5 w-5 text-muted-foreground" />
           <h1 className="text-xl font-semibold">Invoices</h1>
         </div>
-        <Button onClick={() => setShowDialog(true)}>
-          <Plus className="h-4 w-4 mr-2" />
-          New Invoice
-        </Button>
+        <div className="flex items-center gap-2">
+          {invoices.length > 0 && (
+            <Button variant="outline" onClick={exportCsv}>
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+          )}
+          <Button onClick={() => setShowDialog(true)}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Invoice
+          </Button>
+        </div>
       </div>
 
       {/* Status Tabs */}
