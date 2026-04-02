@@ -1,0 +1,221 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Users, Plus, Loader2 } from "lucide-react";
+
+interface Contact {
+  id: string;
+  name: string;
+  recipientType: string;
+  recipientLegalName: string;
+  recipientEmail: string;
+}
+
+export default function ContactsPage() {
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    recipientLegalName: "",
+    recipientEmail: "",
+  });
+  const [error, setError] = useState("");
+
+  const fetchContacts = useCallback(async () => {
+    try {
+      const res = await fetch("/api/contacts");
+      if (res.ok) {
+        const data = await res.json();
+        setContacts(data.items || []);
+      }
+    } catch {
+      // No API key yet — that's fine
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchContacts();
+  }, [fetchContacts]);
+
+  async function handleCreate(e: React.FormEvent) {
+    e.preventDefault();
+    setCreating(true);
+    setError("");
+
+    try {
+      const res = await fetch("/api/contacts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error || "Failed to create contact");
+        setCreating(false);
+        return;
+      }
+
+      setForm({ name: "", recipientLegalName: "", recipientEmail: "" });
+      setShowDialog(false);
+      fetchContacts();
+    } catch {
+      setError("Failed to create contact");
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Users className="h-5 w-5 text-muted-foreground" />
+          <h1 className="text-xl font-semibold">Contacts</h1>
+        </div>
+        <Button onClick={() => setShowDialog(true)}>
+          <Plus className="h-4 w-4 mr-2" />
+          New Contact
+        </Button>
+      </div>
+
+      {/* Table */}
+      {loading ? (
+        <div className="flex items-center justify-center py-20">
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        </div>
+      ) : contacts.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+            <Users className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium">No contacts yet</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Add your first customer to start invoicing.
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => setShowDialog(true)}
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add Contact
+          </Button>
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border bg-muted/50">
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Name
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Legal Name
+                </th>
+                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Email
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {contacts.map((c) => (
+                <tr key={c.id} className="hover:bg-muted/30 transition-colors">
+                  <td className="px-4 py-3 text-sm font-medium">{c.name}</td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {c.recipientLegalName || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                    {c.recipientEmail}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Dialog */}
+      {showDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="fixed inset-0 bg-black/60"
+            onClick={() => setShowDialog(false)}
+          />
+          <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
+            <h2 className="text-lg font-semibold mb-1">New Contact</h2>
+            <p className="text-sm text-muted-foreground mb-5">
+              Add a customer or business contact for invoicing.
+            </p>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="c-name">Display Name</Label>
+                <Input
+                  id="c-name"
+                  placeholder="e.g. Acme Corp"
+                  value={form.name}
+                  onChange={(e) =>
+                    setForm({ ...form, name: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="c-legal">Legal Name</Label>
+                <Input
+                  id="c-legal"
+                  placeholder="e.g. Acme Corporation Pty Ltd"
+                  value={form.recipientLegalName}
+                  onChange={(e) =>
+                    setForm({ ...form, recipientLegalName: e.target.value })
+                  }
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="c-email">Email</Label>
+                <Input
+                  id="c-email"
+                  type="email"
+                  placeholder="billing@acme.com"
+                  value={form.recipientEmail}
+                  onChange={(e) =>
+                    setForm({ ...form, recipientEmail: e.target.value })
+                  }
+                  required
+                />
+              </div>
+              {error && (
+                <p className="text-sm text-red-400 bg-red-400/10 rounded-md px-3 py-2">
+                  {error}
+                </p>
+              )}
+              <div className="flex justify-end gap-3 pt-2">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setShowDialog(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={creating}>
+                  {creating ? (
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  ) : null}
+                  Create Contact
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

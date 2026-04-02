@@ -1,0 +1,120 @@
+const SLASH_BASE = "https://api.joinslash.com";
+
+export class SlashApiError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
+async function slashFetch(
+  path: string,
+  apiKey: string,
+  options?: RequestInit
+): Promise<Response> {
+  const res = await fetch(`${SLASH_BASE}${path}`, {
+    ...options,
+    headers: {
+      "X-API-Key": apiKey,
+      "Content-Type": "application/json",
+      ...(options?.headers || {}),
+    },
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new SlashApiError(
+      `Slash API error ${res.status}: ${body || res.statusText}`,
+      res.status
+    );
+  }
+
+  return res;
+}
+
+export async function listLegalEntities(apiKey: string) {
+  const res = await slashFetch("/legal-entity", apiKey);
+  return res.json();
+}
+
+export async function listAccounts(apiKey: string) {
+  const res = await slashFetch("/account", apiKey);
+  return res.json();
+}
+
+export async function listContacts(apiKey: string) {
+  const res = await slashFetch("/contact", apiKey);
+  return res.json();
+}
+
+export async function createContact(
+  apiKey: string,
+  data: {
+    name: string;
+    recipientLegalName: string;
+    recipientEmail: string;
+  }
+) {
+  const res = await slashFetch("/contact", apiKey, {
+    method: "POST",
+    body: JSON.stringify({ ...data, recipientType: "contact" }),
+  });
+  return res.json();
+}
+
+export async function listInvoices(
+  apiKey: string,
+  params?: {
+    status?: string;
+    contactId?: string;
+    sortBy?: string;
+    sortDirection?: string;
+  }
+) {
+  const search = new URLSearchParams();
+  if (params?.status) search.set("status", params.status);
+  if (params?.contactId) search.set("contactId", params.contactId);
+  if (params?.sortBy) search.set("sortBy", params.sortBy);
+  if (params?.sortDirection) search.set("sortDirection", params.sortDirection);
+  const qs = search.toString();
+  const res = await slashFetch(`/invoice${qs ? `?${qs}` : ""}`, apiKey);
+  return res.json();
+}
+
+export async function getInvoice(apiKey: string, invoiceId: string) {
+  const res = await slashFetch(`/invoice/${invoiceId}`, apiKey);
+  return res.json();
+}
+
+export async function createInvoice(
+  apiKey: string,
+  data: {
+    accountId: string;
+    legalEntityContactId: string;
+    details: {
+      issuedAt: string;
+      dueAt: string;
+      invoiceTz: string;
+      lineItemsAndTotals: {
+        lineItems: { name: string; quantity: number; priceCents: number }[];
+        discount?: { type: "percentage"; percent: number };
+        tax?: { type: "percentage"; percent: number };
+      };
+      invoiceNumber?: string;
+      memo?: string;
+      version: number;
+    };
+  }
+) {
+  const res = await slashFetch("/invoice", apiKey, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+  return res.json();
+}
+
+export async function getInvoiceSettings(apiKey: string) {
+  const res = await slashFetch("/invoice/settings", apiKey);
+  return res.json();
+}
