@@ -72,7 +72,7 @@ export async function POST(req: Request) {
             ? { tax: { type: "percentage", percent: tax } }
             : {}),
         },
-        ...(invoiceNumber ? { invoiceNumber } : {}),
+        invoiceNumber: invoiceNumber || `INV-${Date.now()}`,
         ...(memo ? { memo } : {}),
         version: 2,
       },
