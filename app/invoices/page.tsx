@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Search,
 } from "lucide-react";
 import {
   DEFAULT_INVOICE_TIME_ZONE,
@@ -26,6 +27,7 @@ import {
 import { cn } from "@/lib/utils";
 
 interface InvoiceItem {
+  slashInvoiceLink?: string | null;
   invoice: {
     id: string;
     status: string;
@@ -93,6 +95,22 @@ function getDashboardInvoicePath(invoiceId: string) {
   return `/invoices/${invoiceId}`;
 }
 
+function normalizeInvoiceUrl(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
+}
+
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -101,7 +119,9 @@ export default function InvoicesPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
+  const [createdInvoiceLink, setCreatedInvoiceLink] = useState<string | null>(null);
   const [copiedInvoiceId, setCopiedInvoiceId] = useState<string | null>(null);
 
   // Invoice form state
@@ -123,7 +143,7 @@ export default function InvoicesPage() {
       const res = await fetch(`/api/invoices?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setInvoices(data.items || []);
+        setInvoices(Array.isArray(data.items) ? data.items : []);
       }
     } catch {
       // OK
@@ -148,6 +168,32 @@ export default function InvoicesPage() {
     fetchInvoices();
     fetchContacts();
   }, [fetchInvoices, fetchContacts]);
+
+  const visibleInvoices = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return invoices;
+
+    return invoices.filter((item) => {
+      const totalCents = item.invoiceDetails.lineItemsAndTotals?.totalAmountCents || 0;
+      const haystack = [
+        item.invoice.id,
+        item.invoice.status,
+        item.invoiceDetails.invoiceNumber,
+        item.invoiceDetails.billedTo?.name,
+        item.invoiceDetails.billedTo?.email,
+        item.invoiceDetails.memo,
+        item.invoiceDetails.issuedAt,
+        item.invoiceDetails.dueAt,
+        totalCents.toString(),
+        (totalCents / 100).toFixed(2),
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      return haystack.includes(query);
+    });
+  }, [invoices, searchQuery]);
 
   const subtotal = lineItems.reduce(
     (sum, li) => sum + li.quantity * li.price,
@@ -226,10 +272,12 @@ export default function InvoicesPage() {
       const data = await res.json();
       const invoiceId =
         typeof data?.invoice?.id === "string" ? data.invoice.id : null;
+      const slashInvoiceLink = normalizeInvoiceUrl(data?.slashInvoiceLink);
 
       resetForm();
       setShowDialog(false);
       setCreatedInvoiceId(invoiceId);
+      setCreatedInvoiceLink(slashInvoiceLink);
       fetchInvoices();
     } catch {
       setError("Failed to create invoice");
@@ -240,7 +288,7 @@ export default function InvoicesPage() {
 
   function exportCsv() {
     const headers = ["Invoice #", "Customer", "Email", "Issued", "Due", "Amount", "Collected", "Status", "Memo"];
-    const rows = invoices.map((item) => [
+    const rows = visibleInvoices.map((item) => [
       item.invoiceDetails.invoiceNumber || "",
       item.invoiceDetails.billedTo?.name || "",
       item.invoiceDetails.billedTo?.email || "",
@@ -272,11 +320,50 @@ export default function InvoicesPage() {
     URL.revokeObjectURL(url);
   }
 
-  async function copyInvoiceLink(invoiceId: string) {
-    const link = new URL(
-      getDashboardInvoicePath(invoiceId),
-      window.location.origin
-    ).toString();
+  async function resolveSlashInvoiceLink(
+    invoiceId: string,
+    preferredLink?: string | null
+  ) {
+    const direct = normalizeInvoiceUrl(preferredLink);
+    if (direct) return direct;
+
+    const listed = normalizeInvoiceUrl(
+      invoices.find((item) => item.invoice.id === invoiceId)?.slashInvoiceLink
+    );
+    if (listed) return listed;
+
+    try {
+      const res = await fetch(`/api/invoices/${invoiceId}`);
+      if (!res.ok) return null;
+
+      const data = await res.json();
+      const fetchedLink = normalizeInvoiceUrl(data?.slashInvoiceLink);
+      if (!fetchedLink) return null;
+
+      setInvoices((current) =>
+        current.map((item) =>
+          item.invoice.id === invoiceId
+            ? { ...item, slashInvoiceLink: fetchedLink }
+            : item
+        )
+      );
+
+      if (createdInvoiceId === invoiceId) {
+        setCreatedInvoiceLink(fetchedLink);
+      }
+
+      return fetchedLink;
+    } catch {
+      return null;
+    }
+  }
+
+  async function copyInvoiceLink(invoiceId: string, preferredLink?: string | null) {
+    const link = await resolveSlashInvoiceLink(invoiceId, preferredLink);
+    if (!link) {
+      setError("Slash invoice link is not available yet. Try again in a moment.");
+      return;
+    }
 
     try {
       await navigator.clipboard.writeText(link);
@@ -300,7 +387,7 @@ export default function InvoicesPage() {
           <h1 className="text-xl font-semibold">Invoices</h1>
         </div>
         <div className="flex items-center gap-2">
-          {invoices.length > 0 && (
+          {visibleInvoices.length > 0 && (
             <Button variant="outline" onClick={exportCsv}>
               <Download className="h-4 w-4 mr-2" />
               Export CSV
@@ -319,52 +406,71 @@ export default function InvoicesPage() {
             <div>
               <p className="font-medium text-emerald-300">Invoice created</p>
               <p className="text-sm text-emerald-100/80">
-                The dashboard link is ready to copy or open.
+                {createdInvoiceLink
+                  ? "The Slash invoice link is ready to copy and share."
+                  : "Waiting for Slash to return the invoice link. Try Copy Link in a moment."}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => copyInvoiceLink(createdInvoiceId)}
+                onClick={() => copyInvoiceLink(createdInvoiceId, createdInvoiceLink)}
               >
                 {copiedInvoiceId === createdInvoiceId ? (
                   <Check className="mr-2 h-4 w-4" />
                 ) : (
                   <Copy className="mr-2 h-4 w-4" />
                 )}
-                {copiedInvoiceId === createdInvoiceId ? "Copied" : "Copy Link"}
+                {copiedInvoiceId === createdInvoiceId ? "Copied" : "Copy Slash Link"}
               </Button>
-              <Button asChild>
-                <Link href={getDashboardInvoicePath(createdInvoiceId)}>
-                  <ExternalLink className="mr-2 h-4 w-4" />
-                  Open Invoice
-                </Link>
-              </Button>
+              {createdInvoiceLink ? (
+                <Button asChild>
+                  <a href={createdInvoiceLink} target="_blank" rel="noreferrer">
+                    <ExternalLink className="mr-2 h-4 w-4" />
+                    Open Slash Invoice
+                  </a>
+                </Button>
+              ) : (
+                <Button type="button" variant="outline" disabled>
+                  Link Pending
+                </Button>
+              )}
             </div>
           </div>
         </div>
       )}
 
       {/* Status Tabs */}
-      <div className="flex gap-1 mb-6 bg-muted/50 rounded-lg p-1 w-fit">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => {
-              setStatusFilter(tab.value);
-              setLoading(true);
-            }}
-            className={cn(
-              "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
-              statusFilter === tab.value
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            )}
-          >
-            {tab.label}
-          </button>
-        ))}
+      <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => {
+                setStatusFilter(tab.value);
+                setLoading(true);
+              }}
+              className={cn(
+                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                statusFilter === tab.value
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative w-full lg:max-w-sm">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search invoice #, customer, email, status..."
+            className="pl-9"
+          />
+        </div>
       </div>
 
       {/* Table */}
@@ -388,6 +494,23 @@ export default function InvoicesPage() {
           >
             <Plus className="h-4 w-4 mr-2" />
             Create Invoice
+          </Button>
+        </div>
+      ) : visibleInvoices.length === 0 ? (
+        <div className="flex flex-col items-center justify-center py-20 text-center">
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
+            <Search className="h-6 w-6 text-muted-foreground" />
+          </div>
+          <p className="font-medium">No matching invoices</p>
+          <p className="text-sm text-muted-foreground mt-1">
+            Try a different search term.
+          </p>
+          <Button
+            variant="outline"
+            className="mt-4"
+            onClick={() => setSearchQuery("")}
+          >
+            Clear Search
           </Button>
         </div>
       ) : (
@@ -419,7 +542,7 @@ export default function InvoicesPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {invoices.map((item) => (
+              {visibleInvoices.map((item) => (
                 <tr
                   key={item.invoice.id}
                   className="hover:bg-muted/30 transition-colors"
@@ -453,21 +576,23 @@ export default function InvoicesPage() {
                     <div className="flex justify-end gap-2">
                       <Button variant="ghost" size="sm" asChild>
                         <Link href={getDashboardInvoicePath(item.invoice.id)}>
-                          View
+                          Details
                         </Link>
                       </Button>
                       <Button
                         type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => copyInvoiceLink(item.invoice.id)}
+                        onClick={() =>
+                          copyInvoiceLink(item.invoice.id, item.slashInvoiceLink)
+                        }
                       >
                         {copiedInvoiceId === item.invoice.id ? (
                           <Check className="mr-2 h-3.5 w-3.5" />
                         ) : (
                           <Copy className="mr-2 h-3.5 w-3.5" />
                         )}
-                        {copiedInvoiceId === item.invoice.id ? "Copied" : "Copy Link"}
+                        {copiedInvoiceId === item.invoice.id ? "Copied" : "Copy Slash Link"}
                       </Button>
                     </div>
                   </td>

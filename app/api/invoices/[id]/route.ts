@@ -6,6 +6,11 @@ import {
   upstreamError,
 } from "@/lib/session";
 import { getInvoice } from "@/lib/slash-api";
+import { extractSlashInvoiceLink } from "@/lib/slash-invoice-link";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 export async function GET(
   _req: Request,
@@ -25,7 +30,15 @@ export async function GET(
 
     const { id } = await params;
     const data = await getInvoice(apiKey, id);
-    return NextResponse.json(data);
+
+    if (!isRecord(data)) {
+      return NextResponse.json(data);
+    }
+
+    return NextResponse.json({
+      ...data,
+      slashInvoiceLink: extractSlashInvoiceLink(data),
+    });
   } catch (error: unknown) {
     return upstreamError(error, "Failed to fetch invoice");
   }

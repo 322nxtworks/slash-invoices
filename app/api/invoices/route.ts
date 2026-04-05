@@ -7,6 +7,7 @@ import {
   upstreamError,
 } from "@/lib/session";
 import { listInvoices, createInvoice } from "@/lib/slash-api";
+import { extractSlashInvoiceLink } from "@/lib/slash-invoice-link";
 import { DEFAULT_INVOICE_TIME_ZONE } from "@/lib/utils";
 
 function normalizeDate(value: unknown) {
@@ -18,6 +19,10 @@ function normalizeOptionalText(value: unknown) {
   if (typeof value !== "string") return undefined;
   const normalized = value.trim();
   return normalized.length > 0 ? normalized : undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 export async function GET(req: Request) {
@@ -47,7 +52,27 @@ export async function GET(req: Request) {
       sort,
       sortDirection,
     });
-    return NextResponse.json(data);
+
+    if (!isRecord(data)) {
+      return NextResponse.json(data);
+    }
+
+    const response: Record<string, unknown> = {
+      ...data,
+      slashInvoiceLink: extractSlashInvoiceLink(data),
+    };
+
+    if (Array.isArray(data.items)) {
+      response.items = data.items.map((item) => {
+        if (!isRecord(item)) return item;
+        return {
+          ...item,
+          slashInvoiceLink: extractSlashInvoiceLink(item),
+        };
+      });
+    }
+
+    return NextResponse.json(response);
   } catch (error: unknown) {
     return upstreamError(error, "Failed to fetch invoices");
   }
@@ -155,7 +180,15 @@ export async function POST(req: Request) {
         version: 2,
       },
     });
-    return NextResponse.json(data);
+
+    if (!isRecord(data)) {
+      return NextResponse.json(data);
+    }
+
+    return NextResponse.json({
+      ...data,
+      slashInvoiceLink: extractSlashInvoiceLink(data),
+    });
   } catch (error: unknown) {
     return upstreamError(error, "Failed to create invoice");
   }

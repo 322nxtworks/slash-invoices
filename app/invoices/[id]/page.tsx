@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
 
 interface InvoiceResponse {
+  slashInvoiceLink?: string | null;
   invoice?: {
     id: string;
     status?: string;
@@ -36,8 +37,20 @@ interface InvoiceResponse {
   };
 }
 
-function getInvoiceLink(invoiceId: string) {
-  return new URL(`/invoices/${invoiceId}`, window.location.origin).toString();
+function normalizeInvoiceUrl(value: unknown) {
+  if (typeof value !== "string") return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return null;
+    }
+    return parsed.toString();
+  } catch {
+    return null;
+  }
 }
 
 function statusBadge(status?: string) {
@@ -110,16 +123,19 @@ export default function InvoiceDetailPage() {
     };
   }, [invoiceId]);
 
-  const dashboardLink = useMemo(() => {
-    if (!invoiceId || typeof window === "undefined") return "";
-    return getInvoiceLink(invoiceId);
-  }, [invoiceId]);
+  const slashInvoiceLink = useMemo(
+    () => normalizeInvoiceUrl(invoice?.slashInvoiceLink),
+    [invoice?.slashInvoiceLink]
+  );
 
   async function copyLink() {
-    if (!dashboardLink) return;
+    if (!slashInvoiceLink) {
+      setError("Slash invoice link is not available yet.");
+      return;
+    }
 
     try {
-      await navigator.clipboard.writeText(dashboardLink);
+      await navigator.clipboard.writeText(slashInvoiceLink);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
@@ -144,23 +160,28 @@ export default function InvoiceDetailPage() {
                 {invoice?.invoiceDetails?.invoiceNumber || "Invoice"}
               </h1>
               <p className="text-sm text-muted-foreground">
-                Dashboard link and invoice details
+                Slash invoice link and invoice details
               </p>
             </div>
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button type="button" variant="outline" onClick={copyLink} disabled={!dashboardLink}>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={copyLink}
+            disabled={!slashInvoiceLink}
+          >
             {copied ? (
               <Check className="mr-2 h-4 w-4" />
             ) : (
               <Copy className="mr-2 h-4 w-4" />
             )}
-            {copied ? "Copied" : "Copy Link"}
+            {copied ? "Copied" : "Copy Slash Link"}
           </Button>
-          {dashboardLink && (
+          {slashInvoiceLink && (
             <Button asChild>
-              <a href={dashboardLink} target="_blank" rel="noreferrer">
+              <a href={slashInvoiceLink} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Open in New Tab
               </a>
