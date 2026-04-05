@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import { ModalPortal } from "@/components/ui/modal-portal";
 import {
   FileText,
   Plus,
@@ -683,220 +684,238 @@ export default function InvoicesPage() {
 
       {/* New Invoice Dialog */}
       {showDialog && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto py-8">
-          <div
-            className="fixed inset-0 bg-black/60 animate-page-enter"
-            onClick={() => {
-              setShowDialog(false);
-              resetForm();
-            }}
-          />
-          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-outline-variant/40 bg-surface-container p-6 shadow-[0_22px_60px_-30px_rgba(0,0,0,0.9)] max-h-[90vh] overflow-auto app-scrollbar animate-panel-enter">
-            <h2 className="text-lg font-semibold mb-1 text-white">New Invoice</h2>
-            <p className="text-sm text-outline-stitch mb-5">
-              Create and send an invoice to a contact.
-            </p>
-            <form onSubmit={handleCreate} className="space-y-5">
-              {/* Contact */}
-              <div className="space-y-2">
-                <Label>Bill To</Label>
-                <select
-                  value={contactId}
-                  onChange={(e) => setContactId(e.target.value)}
-                  required
-                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-                >
-                  <option value="">Select a contact...</option>
-                  {contacts.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.recipientEmail})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Dates */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Issue Date</Label>
-                  <Input
-                    type="date"
-                    value={issuedAt}
-                    onChange={(e) => setIssuedAt(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Due Date</Label>
-                  <Input
-                    type="date"
-                    value={dueAt}
-                    onChange={(e) => setDueAt(e.target.value)}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Invoice Number */}
-              <div className="space-y-2">
-                <Label>Invoice Number (optional)</Label>
-                <Input
-                  placeholder="Auto-generated if blank"
-                  value={invoiceNumber}
-                  onChange={(e) => setInvoiceNumber(e.target.value)}
-                />
-              </div>
-
-              {/* Line Items */}
-              <div className="space-y-3">
-                <Label>Line Items</Label>
-                {lineItems.map((li, i) => (
-                  <div key={i} className="grid grid-cols-[1fr_70px_100px_32px] gap-2 items-end">
-                    {i === 0 && (
-                      <>
-                        <span className="text-xs text-muted-foreground mb-1">Description</span>
-                        <span className="text-xs text-muted-foreground mb-1">Qty</span>
-                        <span className="text-xs text-muted-foreground mb-1">Price ($)</span>
-                        <span />
-                      </>
-                    )}
-                    <Input
-                      placeholder="Item description"
-                      value={li.name}
-                      onChange={(e) => updateLineItem(i, "name", e.target.value)}
-                      required
-                    />
-                    <Input
-                      type="number"
-                      min={1}
-                      value={li.quantity}
-                      onChange={(e) => updateLineItem(i, "quantity", e.target.value)}
-                      required
-                    />
-                    <Input
-                      type="number"
-                      min={0}
-                      step="0.01"
-                      value={li.price || ""}
-                      onChange={(e) => updateLineItem(i, "price", e.target.value)}
-                      placeholder="0.00"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => removeLineItem(i)}
-                      className="h-10 w-8 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                      disabled={lineItems.length <= 1}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addLineItem}
-                >
-                  <Plus className="h-3 w-3 mr-1" />
-                  Add Line Item
-                </Button>
-              </div>
-
-              {/* Discount & Tax */}
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Discount (%)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={discount || ""}
-                    onChange={(e) => setDiscount(Number(e.target.value) || 0)}
-                    placeholder="0"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Tax (%)</Label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={tax || ""}
-                    onChange={(e) => setTax(Number(e.target.value) || 0)}
-                    placeholder="0"
-                  />
-                </div>
-              </div>
-
-              {/* Totals */}
-              <div className="rounded-xl bg-muted/50 p-4 space-y-1">
-                <div className="flex justify-between text-sm text-muted-foreground">
-                  <span>Subtotal</span>
-                  <span className="font-mono">
-                    ${subtotal.toFixed(2)}
-                  </span>
-                </div>
-                {discount > 0 && (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Discount ({discount}%)</span>
-                    <span className="font-mono">
-                      -${discountAmount.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                {tax > 0 && (
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>Tax ({tax}%)</span>
-                    <span className="font-mono">
-                      +${taxAmount.toFixed(2)}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-sm font-semibold pt-1 border-t border-border">
-                  <span>Total</span>
-                  <span className="font-mono">${total.toFixed(2)}</span>
-                </div>
-              </div>
-
-              {/* Memo */}
-              <div className="space-y-2">
-                <Label>Memo (optional)</Label>
-                <textarea
-                  className="flex min-h-[88px] w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
-                  placeholder="Notes or payment instructions"
-                  value={memo}
-                  onChange={(e) => setMemo(e.target.value)}
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-red-400 bg-red-400/10 rounded-xl px-3 py-2">
-                  {error}
+        <ModalPortal>
+          <div className="fixed inset-0 z-[120]">
+            <div
+              className="absolute inset-0 bg-black/65 backdrop-blur-[2px] animate-page-enter"
+              onClick={() => {
+                setShowDialog(false);
+                resetForm();
+              }}
+            />
+            <div className="relative flex min-h-full items-start justify-center overflow-y-auto app-scrollbar px-4 py-8 sm:px-6">
+              <div className="relative z-10 w-full max-w-3xl rounded-3xl border border-outline-variant/40 bg-[linear-gradient(160deg,rgba(77,142,255,0.13),rgba(28,32,40,0.95)_44%,rgba(28,32,40,0.98))] p-6 shadow-[0_35px_90px_-52px_rgba(0,0,0,1)] max-h-[92vh] overflow-y-auto app-scrollbar animate-panel-enter">
+                <h2 className="mb-1 text-lg font-semibold text-white">New Invoice</h2>
+                <p className="mb-5 text-sm text-outline-stitch">
+                  Create and send an invoice to a contact.
                 </p>
-              )}
+                <form onSubmit={handleCreate} className="space-y-5">
+                  {/* Contact */}
+                  <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                    <div className="space-y-2">
+                      <Label>Bill To</Label>
+                      <select
+                        value={contactId}
+                        onChange={(e) => setContactId(e.target.value)}
+                        required
+                        className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                      >
+                        <option value="">Select a contact...</option>
+                        {contacts.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.recipientEmail})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
 
-              <div className="flex justify-end gap-3 pt-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setShowDialog(false);
-                    resetForm();
-                  }}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={creating}>
-                  {creating ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  ) : null}
-                  Create Invoice
-                </Button>
+                  {/* Dates + Invoice Number */}
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Issue Date</Label>
+                          <Input
+                            type="date"
+                            value={issuedAt}
+                            onChange={(e) => setIssuedAt(e.target.value)}
+                            required
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Due Date</Label>
+                          <Input
+                            type="date"
+                            value={dueAt}
+                            onChange={(e) => setDueAt(e.target.value)}
+                            required
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                      <div className="space-y-2">
+                        <Label>Invoice Number (optional)</Label>
+                        <Input
+                          placeholder="Auto-generated if blank"
+                          value={invoiceNumber}
+                          onChange={(e) => setInvoiceNumber(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Line Items */}
+                  <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                    <div className="space-y-3">
+                      <Label>Line Items</Label>
+                      {lineItems.map((li, i) => (
+                        <div key={i} className="grid grid-cols-[1fr_80px_110px_36px] gap-2 items-end">
+                          {i === 0 && (
+                            <>
+                              <span className="mb-1 text-xs text-muted-foreground">Description</span>
+                              <span className="mb-1 text-xs text-muted-foreground">Qty</span>
+                              <span className="mb-1 text-xs text-muted-foreground">Price ($)</span>
+                              <span />
+                            </>
+                          )}
+                          <Input
+                            placeholder="Item description"
+                            value={li.name}
+                            onChange={(e) => updateLineItem(i, "name", e.target.value)}
+                            required
+                          />
+                          <Input
+                            type="number"
+                            min={1}
+                            value={li.quantity}
+                            onChange={(e) => updateLineItem(i, "quantity", e.target.value)}
+                            required
+                          />
+                          <Input
+                            type="number"
+                            min={0}
+                            step="0.01"
+                            value={li.price || ""}
+                            onChange={(e) => updateLineItem(i, "price", e.target.value)}
+                            placeholder="0.00"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => removeLineItem(i)}
+                            className="flex h-10 w-9 items-center justify-center rounded-xl text-muted-foreground smooth-transition hover:bg-surface-container-high hover:text-foreground"
+                            disabled={lineItems.length <= 1}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addLineItem}
+                      >
+                        <Plus className="h-3 w-3 mr-1" />
+                        Add Line Item
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>Discount (%)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={discount || ""}
+                            onChange={(e) => setDiscount(Number(e.target.value) || 0)}
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Tax (%)</Label>
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            value={tax || ""}
+                            onChange={(e) => setTax(Number(e.target.value) || 0)}
+                            placeholder="0"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                      <div className="rounded-xl bg-muted/50 p-4 space-y-1">
+                        <div className="flex justify-between text-sm text-muted-foreground">
+                          <span>Subtotal</span>
+                          <span className="font-mono">
+                            ${subtotal.toFixed(2)}
+                          </span>
+                        </div>
+                        {discount > 0 && (
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Discount ({discount}%)</span>
+                            <span className="font-mono">
+                              -${discountAmount.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                        {tax > 0 && (
+                          <div className="flex justify-between text-sm text-muted-foreground">
+                            <span>Tax ({tax}%)</span>
+                            <span className="font-mono">
+                              +${taxAmount.toFixed(2)}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex justify-between border-t border-border pt-1 text-sm font-semibold">
+                          <span>Total</span>
+                          <span className="font-mono">${total.toFixed(2)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Memo */}
+                  <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                    <div className="space-y-2">
+                      <Label>Memo (optional)</Label>
+                      <textarea
+                        className="flex min-h-[88px] w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                        placeholder="Notes or payment instructions"
+                        value={memo}
+                        onChange={(e) => setMemo(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  {error && (
+                    <p className="rounded-xl bg-red-400/10 px-3 py-2 text-sm text-red-400">
+                      {error}
+                    </p>
+                  )}
+
+                  <div className="flex justify-end gap-3 pt-2">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      onClick={() => {
+                        setShowDialog(false);
+                        resetForm();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button type="submit" disabled={creating}>
+                      {creating ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : null}
+                      Create Invoice
+                    </Button>
+                  </div>
+                </form>
               </div>
-            </form>
+            </div>
           </div>
-        </div>
+        </ModalPortal>
       )}
     </div>
   );
