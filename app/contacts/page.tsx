@@ -14,6 +14,17 @@ interface Contact {
   recipientEmail: string;
 }
 
+function getContactInitials(name: string) {
+  const parts = name
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2);
+
+  if (parts.length === 0) return "—";
+  return parts.map((part) => part[0]?.toUpperCase() || "").join("");
+}
+
 export default function ContactsPage() {
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [loading, setLoading] = useState(true);
@@ -176,40 +187,55 @@ export default function ContactsPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-md bg-surface-container-low p-2">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-outline-variant/40 bg-surface-container">
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
-                  Name
-                </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
-                  Legal Name
-                </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
-                  Email
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-outline-variant/30">
-              {contacts.map((c) => (
-                <tr
-                  key={c.id}
-                  className="bg-surface-container hover:bg-surface-container-high transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm font-medium text-on-surface">
-                    {c.name}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-outline-stitch">
-                    {c.recipientLegalName || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-outline-stitch">
-                    {c.recipientEmail}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low/70 p-3 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+          <div className="hidden md:grid md:grid-cols-[1.1fr_1fr_1.2fr] px-4 py-2 text-[11px] font-medium uppercase tracking-wider text-outline-stitch">
+            <span>Name</span>
+            <span>Legal Name</span>
+            <span>Email</span>
+          </div>
+
+          <div className="space-y-2">
+            {contacts.map((c) => (
+              <div
+                key={c.id}
+                className="group rounded-lg border border-transparent bg-surface-container px-4 py-3 smooth-transition hover:border-outline-variant/40 hover:bg-surface-container-high"
+              >
+                <div className="grid gap-3 md:grid-cols-[1.1fr_1fr_1.2fr] md:items-center">
+                  <div className="min-w-0">
+                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-outline-stitch md:hidden">
+                      Name
+                    </p>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-gradient-to-br from-primary-stitch/30 to-primary-container/35 text-[11px] font-semibold text-primary-stitch">
+                        {getContactInitials(c.name)}
+                      </div>
+                      <p className="truncate text-sm font-medium text-on-surface">
+                        {c.name}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-outline-stitch md:hidden">
+                      Legal Name
+                    </p>
+                    <p className="truncate text-sm text-outline-stitch">
+                      {c.recipientLegalName || "—"}
+                    </p>
+                  </div>
+
+                  <div className="min-w-0">
+                    <p className="mb-1 text-[11px] font-medium uppercase tracking-wider text-outline-stitch md:hidden">
+                      Email
+                    </p>
+                    <p className="truncate text-sm text-outline-stitch">
+                      {c.recipientEmail}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
