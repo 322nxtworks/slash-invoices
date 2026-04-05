@@ -456,18 +456,18 @@ export default function ContractsPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-error-container/30 bg-error-container/20 px-4 py-3 text-sm text-error-stitch animate-panel-enter">
+        <div className="rounded-xl border border-error-container/30 bg-error-container/20 px-4 py-3 text-sm text-error-stitch animate-panel-enter">
           {error}
         </div>
       )}
       {success && (
-        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 animate-panel-enter">
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 animate-panel-enter">
           {success}
         </div>
       )}
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-        <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+        <div className="rounded-2xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
               <h2 className="font-semibold text-white">Create Contract</h2>
@@ -500,7 +500,7 @@ export default function ContractsPage() {
                   id="template"
                   value={selectedTemplateId}
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-outline-variant/50 bg-background px-3 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
+                  className="flex h-11 w-full rounded-xl border border-outline-variant/50 bg-background px-4 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
                 >
                   {templates.length === 0 && (
                     <option value="">No templates available</option>
@@ -519,7 +519,7 @@ export default function ContractsPage() {
                   id="contact"
                   value={selectedContactId}
                   onChange={(e) => setSelectedContactId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-outline-variant/50 bg-background px-3 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
+                  className="flex h-11 w-full rounded-xl border border-outline-variant/50 bg-background px-4 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
                 >
                   <option value="">Choose a contact</option>
                   {contacts.map((contact) => (
@@ -614,7 +614,7 @@ export default function ContractsPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
               <div className="mb-3 flex items-center justify-between gap-4">
                 <div>
                   <h3 className="font-medium text-white">Template Placeholder Fields</h3>
@@ -658,7 +658,7 @@ export default function ContractsPage() {
               )}
             </div>
 
-            <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
               <h3 className="font-medium text-white">Signer Field Defaults</h3>
               <p className="mb-3 text-sm text-outline-stitch">
                 Pre-fill any signer fields you added to the template editor.
@@ -690,7 +690,7 @@ export default function ContractsPage() {
               )}
             </div>
 
-            <label className="flex items-center gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-low px-4 py-3 text-sm text-on-surface smooth-transition">
+            <label className="flex items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low px-4 py-3 text-sm text-on-surface smooth-transition">
               <input
                 type="checkbox"
                 checked={form.saveAsDraft}
@@ -711,7 +711,7 @@ export default function ContractsPage() {
               <Button
                 type="submit"
                 disabled={creating || !selectedTemplateId}
-                className="bg-gradient-to-br from-primary-stitch to-primary-container text-on-primary-fixed border-0 hover:opacity-90 rounded-md shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]"
+                className="bg-gradient-to-br from-primary-stitch to-primary-container text-on-primary-fixed border-0 hover:opacity-90 rounded-xl shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]"
               >
                 {creating ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -727,7 +727,7 @@ export default function ContractsPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+          <div className="rounded-2xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
             <h2 className="font-semibold text-white">Selected Template</h2>
             <p className="mt-1 text-sm text-outline-stitch">
               {templateDetails?.title || "No template selected"}
@@ -770,7 +770,7 @@ export default function ContractsPage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+          <div className="rounded-2xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
             <h2 className="font-semibold text-white">Safety Defaults</h2>
             <ul className="mt-3 space-y-2 text-sm text-outline-stitch">
               <li>Live contracts only. Demo mode stays off.</li>
@@ -781,7 +781,7 @@ export default function ContractsPage() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-outline-variant/40 bg-surface-container animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+      <div className="rounded-2xl border border-outline-variant/40 bg-surface-container animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
         <div className="flex items-center justify-between border-b border-outline-variant/40 px-6 py-4">
           <div>
             <h2 className="font-semibold text-white">Contract History</h2>
@@ -807,31 +807,34 @@ export default function ContractsPage() {
             </p>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto app-scrollbar px-3 pb-3">
+            <table className="w-full border-separate border-spacing-y-2">
               <thead>
-                <tr className="border-b border-outline-variant/40 bg-surface-container-high/60">
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
+                <tr>
+                  <th className="rounded-l-xl bg-surface-container-high/70 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Contract
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
+                  <th className="bg-surface-container-high/70 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Signer
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
+                  <th className="bg-surface-container-high/70 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
+                  <th className="bg-surface-container-high/70 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Created
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
+                  <th className="rounded-r-xl bg-surface-container-high/70 px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-outline-variant/30">
+              <tbody>
                 {contracts.map((contract) => (
-                  <tr key={contract.id} className="hover:bg-surface-container-high/40 smooth-transition">
-                    <td className="px-4 py-4 align-top text-sm">
+                  <tr
+                    key={contract.id}
+                    className="bg-surface-container-low/50 hover:bg-surface-container-high/45 smooth-transition shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]"
+                  >
+                    <td className="rounded-l-xl px-4 py-4 align-top text-sm">
                       <div className="font-medium text-on-surface">{contract.title}</div>
                       <div className="mt-1 text-outline-stitch">
                         {contract.templateTitle || contract.templateId}
@@ -852,7 +855,7 @@ export default function ContractsPage() {
                         {contract.createdByUser?.name || contract.createdByUser?.email}
                       </div>
                     </td>
-                    <td className="px-4 py-4 align-top text-sm">
+                    <td className="rounded-r-xl px-4 py-4 align-top text-sm">
                       <div className="flex flex-wrap gap-2">
                         <Button
                           variant="outline"

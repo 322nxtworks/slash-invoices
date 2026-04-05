@@ -83,7 +83,7 @@ function statusBadge(status: string) {
     void: { bg: "bg-outline-variant/30", text: "text-outline-stitch", label: "Void" },
   };
   const s = map[status] || { bg: "bg-outline-variant/30", text: "text-outline-stitch", label: status };
-  return <span className={`inline-flex items-center rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${s.bg} ${s.text}`}>{s.label}</span>;
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider ${s.bg} ${s.text}`}>{s.label}</span>;
 }
 
 function today() {
@@ -404,12 +404,12 @@ export default function InvoicesPage() {
         </div>
         <div className="flex items-center gap-2">
           {visibleInvoices.length > 0 && (
-            <Button variant="outline" className="border-0 bg-surface-variant text-white hover:bg-surface-container-high rounded-md" onClick={exportCsv}>
+            <Button variant="outline" className="border-0 bg-surface-variant text-white hover:bg-surface-container-high rounded-xl" onClick={exportCsv}>
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>
           )}
-          <Button className="bg-gradient-to-br from-primary-stitch to-primary-container text-white border-0 hover:opacity-90 rounded-md shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]" onClick={() => setShowDialog(true)}>
+          <Button className="bg-gradient-to-br from-primary-stitch to-primary-container text-white border-0 hover:opacity-90 rounded-xl shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]" onClick={() => setShowDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Invoice
           </Button>
@@ -417,7 +417,7 @@ export default function InvoicesPage() {
       </div>
 
       {createdInvoiceId && (
-        <div className="mb-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
+        <div className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
           <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
             <div>
               <p className="font-medium text-emerald-300">Invoice created</p>
@@ -459,7 +459,7 @@ export default function InvoicesPage() {
 
       {/* Status Tabs */}
       <div className="mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex gap-1 bg-muted/50 rounded-lg p-1 w-fit">
+        <div className="flex gap-1 bg-muted/50 rounded-xl p-1.5 w-fit">
           {STATUS_TABS.map((tab) => (
             <button
               key={tab.value}
@@ -468,7 +468,7 @@ export default function InvoicesPage() {
                 setLoading(true);
               }}
               className={cn(
-                "px-3 py-1.5 text-sm font-medium rounded-md transition-colors",
+                "px-3.5 py-2 text-sm font-medium rounded-lg transition-colors",
                 statusFilter === tab.value
                   ? "bg-background text-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
@@ -530,29 +530,29 @@ export default function InvoicesPage() {
           </Button>
         </div>
       ) : (
-        <div className="rounded-md bg-surface-container-low p-2">
+        <div className="rounded-2xl border border-outline-variant/30 bg-surface-container-low p-3 shadow-[0_14px_32px_-24px_rgba(0,0,0,0.8)]">
           <table className="w-full border-spacing-y-2 border-separate">
             <thead>
               <tr>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="rounded-l-xl bg-surface-container-high/70 text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Invoice #
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="bg-surface-container-high/70 text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="bg-surface-container-high/70 text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Issued
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="bg-surface-container-high/70 text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Due
                 </th>
-                <th className="text-right px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="bg-surface-container-high/70 text-right px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="bg-surface-container-high/70 text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-right px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
+                <th className="rounded-r-xl bg-surface-container-high/70 text-right px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Link
                 </th>
               </tr>
@@ -570,14 +570,14 @@ export default function InvoicesPage() {
                 return (
                   <Fragment key={item.invoice.id}>
                     <tr
-                      className="cursor-pointer bg-surface-container hover:bg-surface-container-high transition-colors group"
+                      className="cursor-pointer bg-surface-container hover:bg-surface-container-high transition-colors group shadow-[inset_0_0_0_1px_rgba(255,255,255,0.03)]"
                       onClick={() =>
                         setExpandedInvoiceId((current) =>
                           current === item.invoice.id ? null : item.invoice.id
                         )
                       }
                     >
-                      <td className="px-4 py-3 text-sm font-medium rounded-l-md">
+                      <td className="px-4 py-3.5 text-sm font-medium rounded-l-xl">
                         <div className="flex items-center gap-2">
                           {isExpanded ? (
                             <ChevronDown className="h-4 w-4 text-outline-stitch" />
@@ -604,7 +604,7 @@ export default function InvoicesPage() {
                       <td className="px-4 py-3">
                         {statusBadge(item.invoice.status)}
                       </td>
-                      <td className="px-4 py-3 rounded-r-md">
+                      <td className="px-4 py-3.5 rounded-r-xl">
                         <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             type="button"
@@ -626,9 +626,9 @@ export default function InvoicesPage() {
                       </td>
                     </tr>
                     {isExpanded && (
-                      <tr className="bg-muted/20">
-                        <td colSpan={7} className="px-4 py-4">
-                          <div className="grid gap-3 md:grid-cols-3">
+                      <tr className="bg-transparent">
+                        <td colSpan={7} className="px-4 py-2">
+                          <div className="grid gap-3 rounded-xl border border-outline-variant/35 bg-muted/15 p-4 md:grid-cols-3">
                             <div>
                               <p className="text-xs text-muted-foreground uppercase tracking-wider">
                                 Email
@@ -691,7 +691,7 @@ export default function InvoicesPage() {
               resetForm();
             }}
           />
-          <div className="relative z-10 w-full max-w-lg rounded-lg border border-outline-variant/40 bg-surface-container p-6 shadow-[0_22px_60px_-30px_rgba(0,0,0,0.9)] max-h-[90vh] overflow-auto animate-panel-enter">
+          <div className="relative z-10 w-full max-w-lg rounded-2xl border border-outline-variant/40 bg-surface-container p-6 shadow-[0_22px_60px_-30px_rgba(0,0,0,0.9)] max-h-[90vh] overflow-auto app-scrollbar animate-panel-enter">
             <h2 className="text-lg font-semibold mb-1 text-white">New Invoice</h2>
             <p className="text-sm text-outline-stitch mb-5">
               Create and send an invoice to a contact.
@@ -704,7 +704,7 @@ export default function InvoicesPage() {
                   value={contactId}
                   onChange={(e) => setContactId(e.target.value)}
                   required
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex h-11 w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
                   <option value="">Select a contact...</option>
                   {contacts.map((c) => (
@@ -830,7 +830,7 @@ export default function InvoicesPage() {
               </div>
 
               {/* Totals */}
-              <div className="rounded-md bg-muted/50 p-4 space-y-1">
+              <div className="rounded-xl bg-muted/50 p-4 space-y-1">
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
                   <span className="font-mono">
@@ -863,7 +863,7 @@ export default function InvoicesPage() {
               <div className="space-y-2">
                 <Label>Memo (optional)</Label>
                 <textarea
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
+                  className="flex min-h-[88px] w-full rounded-xl border border-input bg-background px-4 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-none"
                   placeholder="Notes or payment instructions"
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
@@ -871,7 +871,7 @@ export default function InvoicesPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-red-400 bg-red-400/10 rounded-md px-3 py-2">
+                <p className="text-sm text-red-400 bg-red-400/10 rounded-xl px-3 py-2">
                   {error}
                 </p>
               )}
