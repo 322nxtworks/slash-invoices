@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { ensureEsignContractTable, prisma } from "@/lib/prisma";
 import { verifyEsignaturesWebhookSignature } from "@/lib/esignatures";
 
 function deriveStatus(
@@ -27,6 +27,7 @@ function jsonValueOrUndefined(value: unknown) {
 }
 
 export async function POST(req: Request) {
+  await ensureEsignContractTable();
   const signature = req.headers.get("x-signature-sha256");
   const payload = await req.text();
 

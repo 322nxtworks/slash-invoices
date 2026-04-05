@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { ensureEsignContractTable, prisma } from "@/lib/prisma";
 import { getAuthedUser, unauthorized } from "@/lib/session";
 
 export async function GET(
@@ -8,6 +8,7 @@ export async function GET(
 ) {
   const user = await getAuthedUser();
   if (!user) return unauthorized();
+  await ensureEsignContractTable();
 
   const { id } = await params;
   const item = await prisma.esignContract.findUnique({

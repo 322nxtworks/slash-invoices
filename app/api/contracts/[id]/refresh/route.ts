@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { ensureEsignContractTable, prisma } from "@/lib/prisma";
 import {
   getAuthedUser,
   unauthorized,
@@ -20,6 +20,7 @@ export async function POST(
   if (!user) return unauthorized();
 
   try {
+    await ensureEsignContractTable();
     const { id } = await params;
     const existing = await prisma.esignContract.findUnique({
       where: { id },

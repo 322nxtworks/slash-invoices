@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
+import { ensureEsignContractTable, prisma } from "@/lib/prisma";
 import {
   badRequest,
   getAuthedUser,
@@ -58,6 +58,7 @@ function jsonValueOrUndefined(value: unknown) {
 export async function GET() {
   const user = await getAuthedUser();
   if (!user) return unauthorized();
+  await ensureEsignContractTable();
 
   const items = await prisma.esignContract.findMany({
     orderBy: { createdAt: "desc" },
@@ -80,6 +81,7 @@ export async function POST(req: Request) {
   if (!user) return unauthorized();
 
   try {
+    await ensureEsignContractTable();
     const body = await req.json();
     const templateId = normalizeOptionalString(body.templateId);
     const title = normalizeOptionalString(body.title);
