@@ -1,7 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { Fragment, useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +15,8 @@ import {
   Check,
   ExternalLink,
   Search,
+  ChevronDown,
+  ChevronRight,
 } from "lucide-react";
 import {
   DEFAULT_INVOICE_TIME_ZONE,
@@ -25,6 +26,10 @@ import {
   dollarsToCents,
 } from "@/lib/utils";
 import { cn } from "@/lib/utils";
+import {
+  buildSlashInvoiceLinkFromIdentifiers,
+  normalizeSlashUrl,
+} from "@/lib/slash-invoice-link";
 
 interface InvoiceItem {
   slashInvoiceLink?: string | null;
@@ -91,26 +96,6 @@ function in30Days() {
   return formatDateForInput(d, DEFAULT_INVOICE_TIME_ZONE);
 }
 
-function getDashboardInvoicePath(invoiceId: string) {
-  return `/invoices/${invoiceId}`;
-}
-
-function normalizeInvoiceUrl(value: unknown) {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return null;
-    }
-    return parsed.toString();
-  } catch {
-    return null;
-  }
-}
-
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<InvoiceItem[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -120,6 +105,7 @@ export default function InvoicesPage() {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [expandedInvoiceId, setExpandedInvoiceId] = useState<string | null>(null);
   const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
   const [createdInvoiceLink, setCreatedInvoiceLink] = useState<string | null>(null);
   const [copiedInvoiceId, setCopiedInvoiceId] = useState<string | null>(null);
@@ -143,7 +129,21 @@ export default function InvoicesPage() {
       const res = await fetch(`/api/invoices?${params}`);
       if (res.ok) {
         const data = await res.json();
-        setInvoices(Array.isArray(data.items) ? data.items : []);
+        const normalized = Array.isArray(data.items)
+          ? data.items.map((item: unknown) => {
+              const nextItem = item as InvoiceItem;
+              return {
+                ...nextItem,
+                slashInvoiceLink:
+                  normalizeSlashUrl(nextItem.slashInvoiceLink) ||
+                  buildSlashInvoiceLinkFromIdentifiers({
+                    documentId: nextItem.invoiceDetails?.documentId,
+                    invoiceId: nextItem.invoice?.id,
+                  }),
+              } as InvoiceItem;
+            })
+          : [];
+        setInvoices(normalized);
       }
     } catch {
       // OK
@@ -272,7 +272,12 @@ export default function InvoicesPage() {
       const data = await res.json();
       const invoiceId =
         typeof data?.invoice?.id === "string" ? data.invoice.id : null;
-      const slashInvoiceLink = normalizeInvoiceUrl(data?.slashInvoiceLink);
+      const slashInvoiceLink =
+        normalizeSlashUrl(data?.slashInvoiceLink) ||
+        buildSlashInvoiceLinkFromIdentifiers({
+          documentId: data?.invoiceDetails?.documentId,
+          invoiceId,
+        });
 
       resetForm();
       setShowDialog(false);
@@ -324,20 +329,30 @@ export default function InvoicesPage() {
     invoiceId: string,
     preferredLink?: string | null
   ) {
-    const direct = normalizeInvoiceUrl(preferredLink);
+    const direct = normalizeSlashUrl(preferredLink);
     if (direct) return direct;
 
-    const listed = normalizeInvoiceUrl(
-      invoices.find((item) => item.invoice.id === invoiceId)?.slashInvoiceLink
-    );
+    const invoiceItem = invoices.find((item) => item.invoice.id === invoiceId);
+    const listed = normalizeSlashUrl(invoiceItem?.slashInvoiceLink);
     if (listed) return listed;
+
+    const generatedFromItem = buildSlashInvoiceLinkFromIdentifiers({
+      documentId: invoiceItem?.invoiceDetails?.documentId,
+      invoiceId,
+    });
+    if (generatedFromItem) return generatedFromItem;
 
     try {
       const res = await fetch(`/api/invoices/${invoiceId}`);
       if (!res.ok) return null;
 
       const data = await res.json();
-      const fetchedLink = normalizeInvoiceUrl(data?.slashInvoiceLink);
+      const fetchedLink =
+        normalizeSlashUrl(data?.slashInvoiceLink) ||
+        buildSlashInvoiceLinkFromIdentifiers({
+          documentId: data?.invoiceDetails?.documentId,
+          invoiceId: data?.invoice?.id || invoiceId,
+        });
       if (!fetchedLink) return null;
 
       setInvoices((current) =>
@@ -359,6 +374,7 @@ export default function InvoicesPage() {
   }
 
   async function copyInvoiceLink(invoiceId: string, preferredLink?: string | null) {
+    setError("");
     const link = await resolveSlashInvoiceLink(invoiceId, preferredLink);
     if (!link) {
       setError("Slash invoice link is not available yet. Try again in a moment.");
@@ -537,67 +553,129 @@ export default function InvoicesPage() {
                   Status
                 </th>
                 <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Actions
+                  Link
                 </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
-              {visibleInvoices.map((item) => (
-                <tr
-                  key={item.invoice.id}
-                  className="hover:bg-muted/30 transition-colors"
-                >
-                  <td className="px-4 py-3 text-sm font-medium">
-                    <Link
-                      href={getDashboardInvoicePath(item.invoice.id)}
-                      className="hover:text-primary hover:underline"
+              {visibleInvoices.map((item) => {
+                const isExpanded = expandedInvoiceId === item.invoice.id;
+                const fallbackLink =
+                  item.slashInvoiceLink ||
+                  buildSlashInvoiceLinkFromIdentifiers({
+                    documentId: item.invoiceDetails?.documentId,
+                    invoiceId: item.invoice.id,
+                  });
+
+                return (
+                  <Fragment key={item.invoice.id}>
+                    <tr
+                      className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      onClick={() =>
+                        setExpandedInvoiceId((current) =>
+                          current === item.invoice.id ? null : item.invoice.id
+                        )
+                      }
                     >
-                      {item.invoiceDetails.invoiceNumber || "View invoice"}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 text-sm">
-                    {item.invoiceDetails.billedTo?.name || "—"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {formatDate(item.invoiceDetails.issuedAt)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
-                    {formatDate(item.invoiceDetails.dueAt)}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-right font-mono">
-                    {formatCurrency(
-                      item.invoiceDetails.lineItemsAndTotals?.totalAmountCents || 0
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    {statusBadge(item.invoice.status)}
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex justify-end gap-2">
-                      <Button variant="ghost" size="sm" asChild>
-                        <Link href={getDashboardInvoicePath(item.invoice.id)}>
-                          Details
-                        </Link>
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          copyInvoiceLink(item.invoice.id, item.slashInvoiceLink)
-                        }
-                      >
-                        {copiedInvoiceId === item.invoice.id ? (
-                          <Check className="mr-2 h-3.5 w-3.5" />
-                        ) : (
-                          <Copy className="mr-2 h-3.5 w-3.5" />
+                      <td className="px-4 py-3 text-sm font-medium">
+                        <div className="flex items-center gap-2">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <span>{item.invoiceDetails.invoiceNumber || item.invoice.id}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-sm">
+                        {item.invoiceDetails.billedTo?.name || "—"}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {formatDate(item.invoiceDetails.issuedAt)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                        {formatDate(item.invoiceDetails.dueAt)}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right font-mono">
+                        {formatCurrency(
+                          item.invoiceDetails.lineItemsAndTotals?.totalAmountCents || 0
                         )}
-                        {copiedInvoiceId === item.invoice.id ? "Copied" : "Copy Slash Link"}
-                      </Button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                      </td>
+                      <td className="px-4 py-3">
+                        {statusBadge(item.invoice.status)}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex justify-end">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              copyInvoiceLink(item.invoice.id, fallbackLink);
+                            }}
+                          >
+                            {copiedInvoiceId === item.invoice.id ? (
+                              <Check className="mr-2 h-3.5 w-3.5" />
+                            ) : (
+                              <Copy className="mr-2 h-3.5 w-3.5" />
+                            )}
+                            {copiedInvoiceId === item.invoice.id ? "Copied" : "Copy Slash Link"}
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                    {isExpanded && (
+                      <tr className="bg-muted/20">
+                        <td colSpan={7} className="px-4 py-4">
+                          <div className="grid gap-3 md:grid-cols-3">
+                            <div>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                                Email
+                              </p>
+                              <p className="mt-1 text-sm">
+                                {item.invoiceDetails.billedTo?.email || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                                Document ID
+                              </p>
+                              <p className="mt-1 text-sm font-mono">
+                                {item.invoiceDetails.documentId || "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                                Internal Invoice ID
+                              </p>
+                              <p className="mt-1 text-sm font-mono">{item.invoice.id}</p>
+                            </div>
+                            <div className="md:col-span-3">
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider">
+                                Memo
+                              </p>
+                              <p className="mt-1 text-sm text-muted-foreground">
+                                {item.invoiceDetails.memo || "No memo added."}
+                              </p>
+                            </div>
+                            {fallbackLink && (
+                              <div className="md:col-span-3">
+                                <Button asChild size="sm" variant="outline">
+                                  <a href={fallbackLink} target="_blank" rel="noreferrer">
+                                    <ExternalLink className="mr-2 h-3.5 w-3.5" />
+                                    Open Slash Invoice
+                                  </a>
+                                </Button>
+                              </div>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
+                );
+              })}
             </tbody>
           </table>
         </div>

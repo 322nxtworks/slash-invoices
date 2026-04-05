@@ -7,6 +7,10 @@ import { ArrowLeft, Check, Copy, ExternalLink, FileText, Loader2 } from "lucide-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  buildSlashInvoiceLinkFromIdentifiers,
+  normalizeSlashUrl,
+} from "@/lib/slash-invoice-link";
 
 interface InvoiceResponse {
   slashInvoiceLink?: string | null;
@@ -35,22 +39,6 @@ interface InvoiceResponse {
       }>;
     };
   };
-}
-
-function normalizeInvoiceUrl(value: unknown) {
-  if (typeof value !== "string") return null;
-  const trimmed = value.trim();
-  if (!trimmed) return null;
-
-  try {
-    const parsed = new URL(trimmed);
-    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
-      return null;
-    }
-    return parsed.toString();
-  } catch {
-    return null;
-  }
 }
 
 function statusBadge(status?: string) {
@@ -124,8 +112,13 @@ export default function InvoiceDetailPage() {
   }, [invoiceId]);
 
   const slashInvoiceLink = useMemo(
-    () => normalizeInvoiceUrl(invoice?.slashInvoiceLink),
-    [invoice?.slashInvoiceLink]
+    () =>
+      normalizeSlashUrl(invoice?.slashInvoiceLink) ||
+      buildSlashInvoiceLinkFromIdentifiers({
+        documentId: invoice?.invoiceDetails?.documentId,
+        invoiceId: invoice?.invoice?.id || invoiceId,
+      }),
+    [invoice?.slashInvoiceLink, invoice?.invoiceDetails?.documentId, invoice?.invoice?.id, invoiceId]
   );
 
   async function copyLink() {
