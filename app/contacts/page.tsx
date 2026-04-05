@@ -217,12 +217,12 @@ export default function ContactsPage() {
       {showDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div
-            className="fixed inset-0 bg-black/60"
+            className="fixed inset-0 bg-black/60 animate-page-enter"
             onClick={() => setShowDialog(false)}
           />
-          <div className="relative z-10 w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-lg">
-            <h2 className="text-lg font-semibold mb-1">New Contact</h2>
-            <p className="text-sm text-muted-foreground mb-5">
+          <div className="relative z-10 w-full max-w-md rounded-lg border border-outline-variant/40 bg-surface-container p-6 shadow-[0_22px_60px_-30px_rgba(0,0,0,0.9)] animate-panel-enter">
+            <h2 className="text-lg font-semibold mb-1 text-white">New Contact</h2>
+            <p className="text-sm text-outline-stitch mb-5">
               Add a customer or business contact for invoicing.
             </p>
             <form onSubmit={handleCreate} className="space-y-4">

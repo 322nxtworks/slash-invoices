@@ -139,22 +139,22 @@ export default function ContractDetailPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 animate-page-enter">
       <div className="flex items-center justify-between gap-4">
         <div className="space-y-2">
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="ghost" size="sm" className="text-outline-stitch hover:text-on-surface hover:bg-surface-container-high" asChild>
             <Link href="/contracts">
               <ArrowLeft className="mr-2 h-4 w-4" />
               Back to Contracts
             </Link>
           </Button>
           <div className="flex items-center gap-3">
-            <FileSignature className="h-5 w-5 text-muted-foreground" />
+            <FileSignature className="h-6 w-6 text-primary-stitch" />
             <div>
-              <h1 className="text-xl font-semibold">
+              <h1 className="text-2xl font-semibold text-white tracking-tight">
                 {contract?.title || "Contract"}
               </h1>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-outline-stitch">
                 Shared contract record and signer links
               </p>
             </div>
@@ -162,7 +162,12 @@ export default function ContractDetailPage() {
         </div>
 
         <div className="flex flex-wrap gap-3">
-          <Button variant="outline" onClick={copyLink} disabled={!contractLink}>
+          <Button
+            variant="outline"
+            onClick={copyLink}
+            disabled={!contractLink}
+            className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
+          >
             {copied ? (
               <Check className="mr-2 h-4 w-4" />
             ) : (
@@ -171,7 +176,11 @@ export default function ContractDetailPage() {
             Copy Link
           </Button>
           {contract?.signPageUrl && (
-            <Button variant="outline" asChild>
+            <Button
+              variant="outline"
+              className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
+              asChild
+            >
               <a href={contract.signPageUrl} target="_blank" rel="noreferrer">
                 <ExternalLink className="mr-2 h-4 w-4" />
                 Open Sign Page
@@ -190,69 +199,69 @@ export default function ContractDetailPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-error-container/30 bg-error-container/20 px-4 py-3 text-sm text-error-stitch animate-panel-enter">
           {error}
         </div>
       )}
 
       {loading ? (
         <div className="flex items-center justify-center py-24">
-          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          <Loader2 className="h-6 w-6 animate-spin text-outline-stitch" />
         </div>
       ) : contract ? (
         <div className="grid gap-6 xl:grid-cols-[1fr_0.9fr]">
           <div className="space-y-6">
-            <div className="rounded-lg border border-border bg-card p-6">
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
               <div className="grid gap-6 md:grid-cols-2">
                 <div>
-                  <p className="text-sm text-muted-foreground">Status</p>
+                  <p className="text-sm text-outline-stitch">Status</p>
                   <div className="mt-2">{statusBadge(contract.status, contract.isDraft)}</div>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Template</p>
-                  <p className="mt-2 font-medium">
+                  <p className="text-sm text-outline-stitch">Template</p>
+                  <p className="mt-2 font-medium text-on-surface">
                     {contract.templateTitle || contract.templateId}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Created</p>
-                  <p className="mt-2 font-medium">{formatDateTime(contract.createdAt)}</p>
+                  <p className="text-sm text-outline-stitch">Created</p>
+                  <p className="mt-2 font-medium text-on-surface">{formatDateTime(contract.createdAt)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Last Synced</p>
-                  <p className="mt-2 font-medium">{formatDateTime(contract.updatedAt)}</p>
+                  <p className="text-sm text-outline-stitch">Last Synced</p>
+                  <p className="mt-2 font-medium text-on-surface">{formatDateTime(contract.updatedAt)}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Created By</p>
-                  <p className="mt-2 font-medium">
+                  <p className="text-sm text-outline-stitch">Created By</p>
+                  <p className="mt-2 font-medium text-on-surface">
                     {contract.createdByUser?.name || contract.createdByUser?.email || "—"}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Metadata</p>
-                  <p className="mt-2 font-medium">{contract.metadata || "—"}</p>
+                  <p className="text-sm text-outline-stitch">Metadata</p>
+                  <p className="mt-2 font-medium text-on-surface">{contract.metadata || "—"}</p>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="font-semibold">Signer</h2>
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+              <h2 className="font-semibold text-white">Signer</h2>
               <div className="mt-4 grid gap-4 md:grid-cols-2">
                 <div>
-                  <p className="text-sm text-muted-foreground">Name</p>
-                  <p className="mt-1 font-medium">{contract.signerName || "—"}</p>
+                  <p className="text-sm text-outline-stitch">Name</p>
+                  <p className="mt-1 font-medium text-on-surface">{contract.signerName || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="mt-1 font-medium">{contract.signerEmail || "—"}</p>
+                  <p className="text-sm text-outline-stitch">Email</p>
+                  <p className="mt-1 font-medium text-on-surface">{contract.signerEmail || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Mobile</p>
-                  <p className="mt-1 font-medium">{contract.signerMobile || "—"}</p>
+                  <p className="text-sm text-outline-stitch">Mobile</p>
+                  <p className="mt-1 font-medium text-on-surface">{contract.signerMobile || "—"}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Company</p>
-                  <p className="mt-1 font-medium">
+                  <p className="text-sm text-outline-stitch">Company</p>
+                  <p className="mt-1 font-medium text-on-surface">
                     {contract.signerCompanyName || "—"}
                   </p>
                 </div>
@@ -261,79 +270,83 @@ export default function ContractDetailPage() {
           </div>
 
           <div className="space-y-6">
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="font-semibold">Placeholder Values</h2>
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+              <h2 className="font-semibold text-white">Placeholder Values</h2>
               <div className="mt-4 space-y-3">
                 {contract.placeholderValues &&
                 Object.keys(contract.placeholderValues).length > 0 ? (
                   Object.entries(contract.placeholderValues).map(([key, value]) => (
                     <div
                       key={key}
-                      className="rounded-md border border-border bg-background/40 px-3 py-2"
+                      className="rounded-md border border-outline-variant/40 bg-surface-container-low px-3 py-2"
                     >
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wider text-outline-stitch">
                         {humanizeKey(key)}
                       </p>
-                      <p className="mt-1 text-sm">{value || "—"}</p>
+                      <p className="mt-1 text-sm text-on-surface">{value || "—"}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-outline-stitch">
                     No placeholder values were stored for this contract.
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="font-semibold">Signer Field Defaults</h2>
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+              <h2 className="font-semibold text-white">Signer Field Defaults</h2>
               <div className="mt-4 space-y-3">
                 {contract.signerFieldDefaults &&
                 Object.keys(contract.signerFieldDefaults).length > 0 ? (
                   Object.entries(contract.signerFieldDefaults).map(([key, value]) => (
                     <div
                       key={key}
-                      className="rounded-md border border-border bg-background/40 px-3 py-2"
+                      className="rounded-md border border-outline-variant/40 bg-surface-container-low px-3 py-2"
                     >
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wider text-outline-stitch">
                         {humanizeKey(key)}
                       </p>
-                      <p className="mt-1 text-sm">{value || "—"}</p>
+                      <p className="mt-1 text-sm text-on-surface">{value || "—"}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-outline-stitch">
                     No signer defaults were stored for this contract.
                   </p>
                 )}
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-card p-6">
-              <h2 className="font-semibold">Signer Field Values</h2>
+            <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+              <h2 className="font-semibold text-white">Signer Field Values</h2>
               <div className="mt-4 space-y-3">
                 {contract.signerFieldValues &&
                 Object.keys(contract.signerFieldValues).length > 0 ? (
                   Object.entries(contract.signerFieldValues).map(([key, value]) => (
                     <div
                       key={key}
-                      className="rounded-md border border-border bg-background/40 px-3 py-2"
+                      className="rounded-md border border-outline-variant/40 bg-surface-container-low px-3 py-2"
                     >
-                      <p className="text-xs uppercase tracking-wider text-muted-foreground">
+                      <p className="text-xs uppercase tracking-wider text-outline-stitch">
                         {humanizeKey(key)}
                       </p>
-                      <p className="mt-1 text-sm">{value || "—"}</p>
+                      <p className="mt-1 text-sm text-on-surface">{value || "—"}</p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm text-outline-stitch">
                     No signer-entered values have been synced yet.
                   </p>
                 )}
               </div>
               {contract.pdfUrl && (
                 <div className="mt-4">
-                  <Button variant="outline" asChild>
+                  <Button
+                    variant="outline"
+                    className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
+                    asChild
+                  >
                     <a href={contract.pdfUrl} target="_blank" rel="noreferrer">
                       <ExternalLink className="mr-2 h-4 w-4" />
                       Open Signed PDF

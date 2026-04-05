@@ -30,7 +30,7 @@ export function Sidebar() {
   return (
     <aside
       className={cn(
-        "flex h-screen flex-col border-r border-outline-variant/50 bg-surface-container-low transition-all duration-200",
+        "flex h-screen flex-col border-r border-outline-variant/40 bg-surface-container-low smooth-transition duration-300 ease-out",
         collapsed ? "w-16" : "w-56"
       )}
     >
@@ -57,9 +57,9 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium smooth-transition",
                 isActive
-                  ? "bg-surface-container-high text-on-surface"
+                  ? "bg-surface-container-high text-on-surface shadow-[inset_0_0_0_1px_rgba(255,255,255,0.04)]"
                   : "text-outline-stitch hover:bg-surface-container hover:text-on-surface"
               )}
             >
@@ -74,7 +74,7 @@ export function Sidebar() {
       <div className="border-t border-outline-variant/50 p-2 space-y-1">
         <button
           onClick={() => signOut({ callbackUrl: "/login" })}
-          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-outline-stitch hover:bg-surface-container hover:text-on-surface transition-colors"
+          className="flex w-full items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-outline-stitch hover:bg-surface-container hover:text-on-surface smooth-transition"
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {!collapsed && <span>Sign Out</span>}

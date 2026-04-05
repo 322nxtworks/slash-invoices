@@ -437,18 +437,18 @@ export default function ContractsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-24">
-        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+        <Loader2 className="h-6 w-6 animate-spin text-outline-stitch" />
       </div>
     );
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 animate-page-enter">
       <div className="flex items-center gap-3">
-        <FileSignature className="h-5 w-5 text-muted-foreground" />
+        <FileSignature className="h-6 w-6 text-primary-stitch" />
         <div>
-          <h1 className="text-xl font-semibold">Contracts</h1>
-          <p className="text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Contracts</h1>
+          <p className="text-sm text-outline-stitch">
             Use your shared eSignatures template to draft and send internal team
             contracts.
           </p>
@@ -456,22 +456,22 @@ export default function ContractsPage() {
       </div>
 
       {error && (
-        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+        <div className="rounded-lg border border-error-container/30 bg-error-container/20 px-4 py-3 text-sm text-error-stitch animate-panel-enter">
           {error}
         </div>
       )}
       {success && (
-        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+        <div className="rounded-lg border border-emerald-500/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300 animate-panel-enter">
           {success}
         </div>
       )}
 
       <div className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-        <div className="rounded-lg border border-border bg-card p-6">
+        <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
           <div className="mb-5 flex items-start justify-between gap-4">
             <div>
-              <h2 className="font-semibold">Create Contract</h2>
-              <p className="text-sm text-muted-foreground">
+              <h2 className="font-semibold text-white">Create Contract</h2>
+              <p className="text-sm text-outline-stitch">
                 Fill the signer details and the placeholder fields from your
                 shared template.
               </p>
@@ -481,6 +481,7 @@ export default function ContractsPage() {
               variant="outline"
               onClick={openTemplateEditor}
               disabled={!selectedTemplateId || openingEditor}
+              className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
             >
               {openingEditor ? (
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -499,7 +500,7 @@ export default function ContractsPage() {
                   id="template"
                   value={selectedTemplateId}
                   onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="flex h-10 w-full rounded-md border border-outline-variant/50 bg-background px-3 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
                 >
                   {templates.length === 0 && (
                     <option value="">No templates available</option>
@@ -518,7 +519,7 @@ export default function ContractsPage() {
                   id="contact"
                   value={selectedContactId}
                   onChange={(e) => setSelectedContactId(e.target.value)}
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="flex h-10 w-full rounded-md border border-outline-variant/50 bg-background px-3 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
                 >
                   <option value="">Choose a contact</option>
                   {contacts.map((contact) => (
@@ -613,16 +614,16 @@ export default function ContractsPage() {
               </div>
             </div>
 
-            <div className="rounded-lg border border-border bg-background/40 p-4">
+            <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
               <div className="mb-3 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-medium">Template Placeholder Fields</h3>
-                  <p className="text-sm text-muted-foreground">
+                  <h3 className="font-medium text-white">Template Placeholder Fields</h3>
+                  <p className="text-sm text-outline-stitch">
                     These are pulled live from the selected eSignatures template.
                   </p>
                 </div>
                 {loadingTemplate && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <Loader2 className="h-4 w-4 animate-spin text-outline-stitch" />
                 )}
               </div>
 
@@ -651,15 +652,15 @@ export default function ContractsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-outline-stitch">
                   This template does not expose placeholder fields.
                 </p>
               )}
             </div>
 
-            <div className="rounded-lg border border-border bg-background/40 p-4">
-              <h3 className="font-medium">Signer Field Defaults</h3>
-              <p className="mb-3 text-sm text-muted-foreground">
+            <div className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
+              <h3 className="font-medium text-white">Signer Field Defaults</h3>
+              <p className="mb-3 text-sm text-outline-stitch">
                 Pre-fill any signer fields you added to the template editor.
               </p>
 
@@ -683,13 +684,13 @@ export default function ContractsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-outline-stitch">
                   No signer field IDs were returned for this template yet.
                 </p>
               )}
             </div>
 
-            <label className="flex items-center gap-3 rounded-lg border border-border bg-background/40 px-4 py-3 text-sm">
+            <label className="flex items-center gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-low px-4 py-3 text-sm text-on-surface smooth-transition">
               <input
                 type="checkbox"
                 checked={form.saveAsDraft}
@@ -699,7 +700,7 @@ export default function ContractsPage() {
                     saveAsDraft: e.target.checked,
                   }))
                 }
-                className="h-4 w-4 rounded border-input bg-background"
+                className="h-4 w-4 rounded border-outline-variant/50 bg-background"
               />
               <span>
                 Save as draft first instead of sending immediately
@@ -707,7 +708,11 @@ export default function ContractsPage() {
             </label>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={creating || !selectedTemplateId}>
+              <Button
+                type="submit"
+                disabled={creating || !selectedTemplateId}
+                className="bg-gradient-to-br from-primary-stitch to-primary-container text-on-primary-fixed border-0 hover:opacity-90 rounded-md shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]"
+              >
                 {creating ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : form.saveAsDraft ? (
@@ -722,12 +727,12 @@ export default function ContractsPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-lg border border-border bg-card p-5">
-            <h2 className="font-semibold">Selected Template</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+            <h2 className="font-semibold text-white">Selected Template</h2>
+            <p className="mt-1 text-sm text-outline-stitch">
               {templateDetails?.title || "No template selected"}
             </p>
-            <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+            <div className="mt-4 space-y-3 text-sm text-outline-stitch">
               <div className="flex items-center justify-between gap-4">
                 <span>Placeholder fields</span>
                 <span>{templateDetails?.placeholder_fields?.length || 0}</span>
@@ -743,6 +748,7 @@ export default function ContractsPage() {
                 variant="outline"
                 onClick={openTemplateEditor}
                 disabled={!selectedTemplateId || openingEditor}
+                className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
               >
                 <PencilLine className="mr-2 h-4 w-4" />
                 Edit
@@ -756,6 +762,7 @@ export default function ContractsPage() {
                   }
                 }}
                 disabled={!selectedTemplateId || loadingTemplate}
+                className="text-outline-stitch hover:text-on-surface hover:bg-surface-container-high"
               >
                 <RefreshCcw className="mr-2 h-4 w-4" />
                 Refresh Fields
@@ -763,9 +770,9 @@ export default function ContractsPage() {
             </div>
           </div>
 
-          <div className="rounded-lg border border-border bg-card p-5">
-            <h2 className="font-semibold">Safety Defaults</h2>
-            <ul className="mt-3 space-y-2 text-sm text-muted-foreground">
+          <div className="rounded-xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+            <h2 className="font-semibold text-white">Safety Defaults</h2>
+            <ul className="mt-3 space-y-2 text-sm text-outline-stitch">
               <li>Live contracts only. Demo mode stays off.</li>
               <li>Draft-first is enabled by default for safer review.</li>
               <li>Contract status sync can be refreshed manually or by webhook.</li>
@@ -774,15 +781,19 @@ export default function ContractsPage() {
         </div>
       </div>
 
-      <div className="rounded-lg border border-border bg-card">
-        <div className="flex items-center justify-between border-b border-border px-6 py-4">
+      <div className="rounded-xl border border-outline-variant/40 bg-surface-container animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+        <div className="flex items-center justify-between border-b border-outline-variant/40 px-6 py-4">
           <div>
-            <h2 className="font-semibold">Contract History</h2>
-            <p className="text-sm text-muted-foreground">
+            <h2 className="font-semibold text-white">Contract History</h2>
+            <p className="text-sm text-outline-stitch">
               Shared across the team so everyone sees the same contracts.
             </p>
           </div>
-          <Button variant="outline" onClick={() => void fetchContracts()}>
+          <Button
+            variant="outline"
+            onClick={() => void fetchContracts()}
+            className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
+          >
             <RefreshCcw className="mr-2 h-4 w-4" />
             Refresh List
           </Button>
@@ -790,8 +801,8 @@ export default function ContractsPage() {
 
         {contracts.length === 0 ? (
           <div className="px-6 py-16 text-center">
-            <p className="font-medium">No contracts yet</p>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="font-medium text-white">No contracts yet</p>
+            <p className="mt-1 text-sm text-outline-stitch">
               Create the first contract from your shared template above.
             </p>
           </div>
@@ -799,43 +810,43 @@ export default function ContractsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-border bg-muted/40">
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <tr className="border-b border-outline-variant/40 bg-surface-container-high/60">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Contract
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Signer
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Status
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Created
                   </th>
-                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wider text-outline-stitch">
                     Actions
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-border">
+              <tbody className="divide-y divide-outline-variant/30">
                 {contracts.map((contract) => (
-                  <tr key={contract.id} className="hover:bg-muted/20">
+                  <tr key={contract.id} className="hover:bg-surface-container-high/40 smooth-transition">
                     <td className="px-4 py-4 align-top text-sm">
-                      <div className="font-medium">{contract.title}</div>
-                      <div className="mt-1 text-muted-foreground">
+                      <div className="font-medium text-on-surface">{contract.title}</div>
+                      <div className="mt-1 text-outline-stitch">
                         {contract.templateTitle || contract.templateId}
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top text-sm">
-                      <div>{contract.signerName || "—"}</div>
-                      <div className="mt-1 text-muted-foreground">
+                      <div className="text-on-surface">{contract.signerName || "—"}</div>
+                      <div className="mt-1 text-outline-stitch">
                         {contract.signerEmail || contract.signerMobile || "—"}
                       </div>
                     </td>
                     <td className="px-4 py-4 align-top text-sm">
                       {statusBadge(contract.status, contract.isDraft)}
                     </td>
-                    <td className="px-4 py-4 align-top text-sm text-muted-foreground">
+                    <td className="px-4 py-4 align-top text-sm text-outline-stitch">
                       <div>{formatDateTime(contract.createdAt)}</div>
                       <div className="mt-1">
                         {contract.createdByUser?.name || contract.createdByUser?.email}
@@ -843,7 +854,12 @@ export default function ContractsPage() {
                     </td>
                     <td className="px-4 py-4 align-top text-sm">
                       <div className="flex flex-wrap gap-2">
-                        <Button variant="outline" size="sm" asChild>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
+                          asChild
+                        >
                           <Link href={getDashboardContractPath(contract.id)}>
                             View
                           </Link>
@@ -852,6 +868,7 @@ export default function ContractsPage() {
                           variant="outline"
                           size="sm"
                           onClick={() => copyContractLink(contract.id)}
+                          className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
                         >
                           {copiedContractId === contract.id ? (
                             <Check className="mr-2 h-4 w-4" />
@@ -861,7 +878,12 @@ export default function ContractsPage() {
                           Copy Link
                         </Button>
                         {contract.signPageUrl && (
-                          <Button variant="outline" size="sm" asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
+                            asChild
+                          >
                             <a
                               href={contract.signPageUrl}
                               target="_blank"
@@ -877,6 +899,7 @@ export default function ContractsPage() {
                           size="sm"
                           onClick={() => refreshContract(contract.id)}
                           disabled={refreshingId === contract.id}
+                          className="text-outline-stitch hover:text-on-surface hover:bg-surface-container-high"
                         >
                           {refreshingId === contract.id ? (
                             <Loader2 className="mr-2 h-4 w-4 animate-spin" />

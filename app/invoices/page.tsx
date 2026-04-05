@@ -685,15 +685,15 @@ export default function InvoicesPage() {
       {showDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-auto py-8">
           <div
-            className="fixed inset-0 bg-black/60"
+            className="fixed inset-0 bg-black/60 animate-page-enter"
             onClick={() => {
               setShowDialog(false);
               resetForm();
             }}
           />
-          <div className="relative z-10 w-full max-w-lg rounded-lg border border-border bg-card p-6 shadow-lg max-h-[90vh] overflow-auto">
-            <h2 className="text-lg font-semibold mb-1">New Invoice</h2>
-            <p className="text-sm text-muted-foreground mb-5">
+          <div className="relative z-10 w-full max-w-lg rounded-lg border border-outline-variant/40 bg-surface-container p-6 shadow-[0_22px_60px_-30px_rgba(0,0,0,0.9)] max-h-[90vh] overflow-auto animate-panel-enter">
+            <h2 className="text-lg font-semibold mb-1 text-white">New Invoice</h2>
+            <p className="text-sm text-outline-stitch mb-5">
               Create and send an invoice to a contact.
             </p>
             <form onSubmit={handleCreate} className="space-y-5">
