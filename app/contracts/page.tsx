@@ -16,7 +16,12 @@ import {
   RefreshCcw,
   Send,
 } from "lucide-react";
-import { formatDateTime, humanizeKey } from "@/lib/utils";
+import {
+  DEFAULT_INVOICE_TIME_ZONE,
+  formatDateForInput,
+  formatDateTime,
+  humanizeKey,
+} from "@/lib/utils";
 
 interface TemplateListItem {
   template_id: string;
@@ -108,6 +113,19 @@ function inferPlaceholderValue(key: string, contact?: Contact | null) {
   return "";
 }
 
+function isDatePlaceholderKey(key: string) {
+  const normalized = key.toLowerCase();
+  return normalized.includes("date");
+}
+
+function getDefaultPlaceholderValue(key: string) {
+  if (isDatePlaceholderKey(key)) {
+    return formatDateForInput(new Date(), DEFAULT_INVOICE_TIME_ZONE);
+  }
+
+  return "";
+}
+
 export default function ContractsPage() {
   const [templates, setTemplates] = useState<TemplateListItem[]>([]);
   const [templateDetails, setTemplateDetails] = useState<TemplateDetails | null>(
@@ -182,7 +200,10 @@ export default function ContractsPage() {
       setTemplateDetails(item);
       setPlaceholderValues((current) =>
         Object.fromEntries(
-          (item.placeholder_fields || []).map((key) => [key, current[key] || ""])
+          (item.placeholder_fields || []).map((key) => [
+            key,
+            current[key] || getDefaultPlaceholderValue(key),
+          ])
         )
       );
       setSignerFieldDefaults((current) =>
@@ -612,6 +633,7 @@ export default function ContractsPage() {
                       <Label htmlFor={`placeholder-${key}`}>{humanizeKey(key)}</Label>
                       <Input
                         id={`placeholder-${key}`}
+                        type={isDatePlaceholderKey(key) ? "date" : "text"}
                         value={placeholderValues[key] || ""}
                         onChange={(e) =>
                           setPlaceholderValues((current) => ({
@@ -619,7 +641,11 @@ export default function ContractsPage() {
                             [key]: e.target.value,
                           }))
                         }
-                        placeholder={`Enter ${humanizeKey(key).toLowerCase()}`}
+                        placeholder={
+                          isDatePlaceholderKey(key)
+                            ? undefined
+                            : `Enter ${humanizeKey(key).toLowerCase()}`
+                        }
                       />
                     </div>
                   ))}
