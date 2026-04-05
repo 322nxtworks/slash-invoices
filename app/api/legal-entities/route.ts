@@ -1,19 +1,28 @@
 import { NextResponse } from "next/server";
-import { getAuthedUser, unauthorized } from "@/lib/session";
+import {
+  getAuthedUser,
+  getUserSlashApiKey,
+  unauthorized,
+  upstreamError,
+} from "@/lib/session";
 import { listLegalEntities } from "@/lib/slash-api";
 
 export async function GET() {
   const user = await getAuthedUser();
   if (!user) return unauthorized();
-  if (!user.slashApiKey) {
-    return NextResponse.json({ error: "No API key configured" }, { status: 400 });
-  }
 
   try {
-    const data = await listLegalEntities(user.slashApiKey);
+    const apiKey = getUserSlashApiKey(user);
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "No API key configured" },
+        { status: 400 }
+      );
+    }
+
+    const data = await listLegalEntities(apiKey);
     return NextResponse.json(data);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to fetch legal entities";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return upstreamError(error, "Failed to fetch legal entities");
   }
 }

@@ -23,7 +23,8 @@ export default function SettingsPage() {
   const [showKey, setShowKey] = useState(false);
   const [maskedKey, setMaskedKey] = useState<string | null>(null);
   const [hasApiKey, setHasApiKey] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const [savingKey, setSavingKey] = useState(false);
+  const [savingPreferences, setSavingPreferences] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
@@ -32,6 +33,44 @@ export default function SettingsPage() {
   const [selectedEntity, setSelectedEntity] = useState("");
   const [selectedAccount, setSelectedAccount] = useState("");
   const [loadingEntities, setLoadingEntities] = useState(false);
+
+  const fetchEntitiesAndAccounts = useCallback(
+    async (entityId?: string, accountIdToKeep?: string) => {
+      setLoadingEntities(true);
+      try {
+        const accountQuery = entityId
+          ? `?legalEntityId=${encodeURIComponent(entityId)}`
+          : "";
+        const [entRes, accRes] = await Promise.all([
+          fetch("/api/legal-entities"),
+          fetch(`/api/accounts${accountQuery}`),
+        ]);
+
+        if (entRes.ok) {
+          const data = await entRes.json();
+          setLegalEntities(data.items || []);
+        }
+
+        if (accRes.ok) {
+          const data = await accRes.json();
+          const nextAccounts = data.items || [];
+          setAccounts(nextAccounts);
+
+          if (
+            accountIdToKeep &&
+            !nextAccounts.some((account: Account) => account.id === accountIdToKeep)
+          ) {
+            setSelectedAccount("");
+          }
+        }
+      } catch {
+        // OK
+      } finally {
+        setLoadingEntities(false);
+      }
+    },
+    []
+  );
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -42,45 +81,24 @@ export default function SettingsPage() {
         setMaskedKey(data.maskedKey);
         setSelectedEntity(data.legalEntityId || "");
         setSelectedAccount(data.accountId || "");
-
-        if (data.hasApiKey) {
-          fetchEntitiesAndAccounts();
-        }
       }
     } catch {
       // OK
     }
   }, []);
 
-  async function fetchEntitiesAndAccounts() {
-    setLoadingEntities(true);
-    try {
-      const [entRes, accRes] = await Promise.all([
-        fetch("/api/legal-entities"),
-        fetch("/api/accounts"),
-      ]);
-      if (entRes.ok) {
-        const data = await entRes.json();
-        setLegalEntities(data.items || []);
-      }
-      if (accRes.ok) {
-        const data = await accRes.json();
-        setAccounts(data.items || []);
-      }
-    } catch {
-      // OK
-    } finally {
-      setLoadingEntities(false);
-    }
-  }
-
   useEffect(() => {
     fetchSettings();
   }, [fetchSettings]);
 
+  useEffect(() => {
+    if (!hasApiKey) return;
+    fetchEntitiesAndAccounts(selectedEntity, selectedAccount);
+  }, [fetchEntitiesAndAccounts, hasApiKey, selectedEntity]);
+
   async function handleSaveKey(e: React.FormEvent) {
     e.preventDefault();
-    setSaving(true);
+    setSavingKey(true);
     setError("");
     setSuccess("");
 
@@ -88,28 +106,30 @@ export default function SettingsPage() {
       const res = await fetch("/api/settings", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ apiKey }),
+        body: JSON.stringify({ apiKey: apiKey.trim() }),
       });
 
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Failed to save API key");
-        setSaving(false);
+        setSavingKey(false);
         return;
       }
 
       setSuccess("Connected to Slash successfully");
       setApiKey("");
+      setSelectedEntity("");
+      setSelectedAccount("");
       fetchSettings();
     } catch {
       setError("Failed to save API key");
     } finally {
-      setSaving(false);
+      setSavingKey(false);
     }
   }
 
   async function handleSavePreferences() {
-    setSaving(true);
+    setSavingPreferences(true);
     setError("");
     setSuccess("");
 
@@ -126,7 +146,7 @@ export default function SettingsPage() {
       if (!res.ok) {
         const data = await res.json();
         setError(data.error || "Failed to save");
-        setSaving(false);
+        setSavingPreferences(false);
         return;
       }
 
@@ -134,7 +154,7 @@ export default function SettingsPage() {
     } catch {
       setError("Failed to save preferences");
     } finally {
-      setSaving(false);
+      setSavingPreferences(false);
     }
   }
 
@@ -197,8 +217,8 @@ export default function SettingsPage() {
                 )}
               </button>
             </div>
-            <Button type="submit" disabled={saving || !apiKey}>
-              {saving ? (
+            <Button type="submit" disabled={savingKey || !apiKey.trim()}>
+              {savingKey ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
                 "Connect"
@@ -228,7 +248,10 @@ export default function SettingsPage() {
                   <Label>Legal Entity</Label>
                   <select
                     value={selectedEntity}
-                    onChange={(e) => setSelectedEntity(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedEntity(e.target.value);
+                      setSelectedAccount("");
+                    }}
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
                     <option value="">Select...</option>
@@ -256,8 +279,11 @@ export default function SettingsPage() {
                   </select>
                 </div>
 
-                <Button onClick={handleSavePreferences} disabled={saving}>
-                  {saving ? (
+                <Button
+                  onClick={handleSavePreferences}
+                  disabled={savingPreferences}
+                >
+                  {savingPreferences ? (
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                   ) : null}
                   Save Preferences

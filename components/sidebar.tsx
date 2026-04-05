@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import {
   Users,
   FileText,
+  ScrollText,
   Settings,
   LogOut,
   ChevronLeft,
@@ -18,6 +19,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/contacts", label: "Contacts", icon: Users },
   { href: "/invoices", label: "Invoices", icon: FileText },
+  { href: "/contracts", label: "Contracts", icon: ScrollText },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

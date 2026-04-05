@@ -1,5 +1,10 @@
 import { NextResponse } from "next/server";
-import { getAuthedUser, unauthorized } from "@/lib/session";
+import {
+  getAuthedUser,
+  getUserSlashApiKey,
+  unauthorized,
+  upstreamError,
+} from "@/lib/session";
 import { getInvoice } from "@/lib/slash-api";
 
 export async function GET(
@@ -8,16 +13,20 @@ export async function GET(
 ) {
   const user = await getAuthedUser();
   if (!user) return unauthorized();
-  if (!user.slashApiKey) {
-    return NextResponse.json({ error: "No API key configured" }, { status: 400 });
-  }
 
   try {
+    const apiKey = getUserSlashApiKey(user);
+    if (!apiKey) {
+      return NextResponse.json(
+        { error: "No API key configured" },
+        { status: 400 }
+      );
+    }
+
     const { id } = await params;
-    const data = await getInvoice(user.slashApiKey, id);
+    const data = await getInvoice(apiKey, id);
     return NextResponse.json(data);
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Failed to fetch invoice";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return upstreamError(error, "Failed to fetch invoice");
   }
 }

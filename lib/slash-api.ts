@@ -38,13 +38,34 @@ export async function listLegalEntities(apiKey: string) {
   return res.json();
 }
 
-export async function listAccounts(apiKey: string) {
-  const res = await slashFetch("/account", apiKey);
+export async function listAccounts(
+  apiKey: string,
+  params?: { legalEntityId?: string }
+) {
+  const search = new URLSearchParams();
+  if (params?.legalEntityId) {
+    search.set("filter:legalEntityId", params.legalEntityId);
+  }
+
+  const qs = search.toString();
+  const res = await slashFetch(`/account${qs ? `?${qs}` : ""}`, apiKey);
   return res.json();
 }
 
-export async function listContacts(apiKey: string) {
-  const res = await slashFetch("/contact", apiKey);
+export async function listContacts(
+  apiKey: string,
+  params?: { legalEntityId?: string; name?: string }
+) {
+  const search = new URLSearchParams();
+  if (params?.legalEntityId) {
+    search.set("filter:legalEntityId", params.legalEntityId);
+  }
+  if (params?.name) {
+    search.set("filter:name", params.name);
+  }
+
+  const qs = search.toString();
+  const res = await slashFetch(`/contact${qs ? `?${qs}` : ""}`, apiKey);
   return res.json();
 }
 
@@ -54,9 +75,16 @@ export async function createContact(
     name: string;
     recipientLegalName: string;
     recipientEmail: string;
-  }
+  },
+  params?: { legalEntityId?: string }
 ) {
-  const res = await slashFetch("/contact", apiKey, {
+  const search = new URLSearchParams();
+  if (params?.legalEntityId) {
+    search.set("filter:legalEntityId", params.legalEntityId);
+  }
+
+  const qs = search.toString();
+  const res = await slashFetch(`/contact${qs ? `?${qs}` : ""}`, apiKey, {
     method: "POST",
     body: JSON.stringify({ ...data, recipientType: "contact" }),
   });
@@ -68,14 +96,20 @@ export async function listInvoices(
   params?: {
     status?: string;
     contactId?: string;
-    sortBy?: string;
+    accountId?: string;
+    legalEntityId?: string;
+    sort?: string;
     sortDirection?: string;
   }
 ) {
   const search = new URLSearchParams();
-  if (params?.status) search.set("status", params.status);
-  if (params?.contactId) search.set("contactId", params.contactId);
-  if (params?.sortBy) search.set("sortBy", params.sortBy);
+  if (params?.legalEntityId) search.set("filter:legalEntityId", params.legalEntityId);
+  if (params?.status) search.set("filter:status", params.status);
+  if (params?.contactId) {
+    search.set("filter:legalEntityContactId", params.contactId);
+  }
+  if (params?.accountId) search.set("filter:accountId", params.accountId);
+  if (params?.sort) search.set("sort", params.sort);
   if (params?.sortDirection) search.set("sortDirection", params.sortDirection);
   const qs = search.toString();
   const res = await slashFetch(`/invoice${qs ? `?${qs}` : ""}`, apiKey);

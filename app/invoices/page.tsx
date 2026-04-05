@@ -1,12 +1,28 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { FileText, Plus, Loader2, Trash2, Download } from "lucide-react";
-import { formatCurrency, formatDate, dollarsToCents } from "@/lib/utils";
+import {
+  FileText,
+  Plus,
+  Loader2,
+  Trash2,
+  Download,
+  Copy,
+  Check,
+  ExternalLink,
+} from "lucide-react";
+import {
+  DEFAULT_INVOICE_TIME_ZONE,
+  formatCurrency,
+  formatDate,
+  formatDateForInput,
+  dollarsToCents,
+} from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 interface InvoiceItem {
@@ -17,8 +33,10 @@ interface InvoiceItem {
     legalEntityContactId: string;
   };
   invoiceDetails: {
+    id?: string;
     issuedAt: string;
     dueAt: string;
+    documentId?: string;
     lineItemsAndTotals: {
       totalAmountCents: number;
       subtotalCents: number;
@@ -62,13 +80,17 @@ function statusBadge(status: string) {
 }
 
 function today() {
-  return new Date().toISOString().split("T")[0];
+  return formatDateForInput(new Date(), DEFAULT_INVOICE_TIME_ZONE);
 }
 
 function in30Days() {
   const d = new Date();
   d.setDate(d.getDate() + 30);
-  return d.toISOString().split("T")[0];
+  return formatDateForInput(d, DEFAULT_INVOICE_TIME_ZONE);
+}
+
+function getDashboardInvoicePath(invoiceId: string) {
+  return `/invoices/${invoiceId}`;
 }
 
 export default function InvoicesPage() {
@@ -79,6 +101,8 @@ export default function InvoicesPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+  const [createdInvoiceId, setCreatedInvoiceId] = useState<string | null>(null);
+  const [copiedInvoiceId, setCopiedInvoiceId] = useState<string | null>(null);
 
   // Invoice form state
   const [contactId, setContactId] = useState("");
@@ -199,8 +223,13 @@ export default function InvoicesPage() {
         return;
       }
 
+      const data = await res.json();
+      const invoiceId =
+        typeof data?.invoice?.id === "string" ? data.invoice.id : null;
+
       resetForm();
       setShowDialog(false);
+      setCreatedInvoiceId(invoiceId);
       fetchInvoices();
     } catch {
       setError("Failed to create invoice");
@@ -235,9 +264,31 @@ export default function InvoicesPage() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `invoices-${new Date().toISOString().split("T")[0]}.csv`;
+    a.download = `invoices-${formatDateForInput(
+      new Date(),
+      DEFAULT_INVOICE_TIME_ZONE
+    )}.csv`;
     a.click();
     URL.revokeObjectURL(url);
+  }
+
+  async function copyInvoiceLink(invoiceId: string) {
+    const link = new URL(
+      getDashboardInvoicePath(invoiceId),
+      window.location.origin
+    ).toString();
+
+    try {
+      await navigator.clipboard.writeText(link);
+      setCopiedInvoiceId(invoiceId);
+      window.setTimeout(() => {
+        setCopiedInvoiceId((current) =>
+          current === invoiceId ? null : current
+        );
+      }, 2000);
+    } catch {
+      setError("Could not copy the invoice link");
+    }
   }
 
   return (
@@ -261,6 +312,39 @@ export default function InvoicesPage() {
           </Button>
         </div>
       </div>
+
+      {createdInvoiceId && (
+        <div className="mb-6 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <p className="font-medium text-emerald-300">Invoice created</p>
+              <p className="text-sm text-emerald-100/80">
+                The dashboard link is ready to copy or open.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => copyInvoiceLink(createdInvoiceId)}
+              >
+                {copiedInvoiceId === createdInvoiceId ? (
+                  <Check className="mr-2 h-4 w-4" />
+                ) : (
+                  <Copy className="mr-2 h-4 w-4" />
+                )}
+                {copiedInvoiceId === createdInvoiceId ? "Copied" : "Copy Link"}
+              </Button>
+              <Button asChild>
+                <Link href={getDashboardInvoicePath(createdInvoiceId)}>
+                  <ExternalLink className="mr-2 h-4 w-4" />
+                  Open Invoice
+                </Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Status Tabs */}
       <div className="flex gap-1 mb-6 bg-muted/50 rounded-lg p-1 w-fit">
@@ -329,6 +413,9 @@ export default function InvoicesPage() {
                 <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   Status
                 </th>
+                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -338,7 +425,12 @@ export default function InvoicesPage() {
                   className="hover:bg-muted/30 transition-colors"
                 >
                   <td className="px-4 py-3 text-sm font-medium">
-                    {item.invoiceDetails.invoiceNumber || "—"}
+                    <Link
+                      href={getDashboardInvoicePath(item.invoice.id)}
+                      className="hover:text-primary hover:underline"
+                    >
+                      {item.invoiceDetails.invoiceNumber || "View invoice"}
+                    </Link>
                   </td>
                   <td className="px-4 py-3 text-sm">
                     {item.invoiceDetails.billedTo?.name || "—"}
@@ -356,6 +448,28 @@ export default function InvoicesPage() {
                   </td>
                   <td className="px-4 py-3">
                     {statusBadge(item.invoice.status)}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-2">
+                      <Button variant="ghost" size="sm" asChild>
+                        <Link href={getDashboardInvoicePath(item.invoice.id)}>
+                          View
+                        </Link>
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyInvoiceLink(item.invoice.id)}
+                      >
+                        {copiedInvoiceId === item.invoice.id ? (
+                          <Check className="mr-2 h-3.5 w-3.5" />
+                        ) : (
+                          <Copy className="mr-2 h-3.5 w-3.5" />
+                        )}
+                        {copiedInvoiceId === item.invoice.id ? "Copied" : "Copy Link"}
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

@@ -8,13 +8,44 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(cuid())
-  email         String   @unique
-  name          String?
-  passwordHash  String
-  slashApiKey   String?
-  legalEntityId String?
-  accountId     String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id             String          @id @default(cuid())
+  email          String          @unique
+  name           String?
+  passwordHash   String
+  slashApiKey    String?
+  legalEntityId  String?
+  accountId      String?
+  esignContracts EsignContract[] @relation("EsignContractCreator")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model EsignContract {
+  id                 String   @id @default(cuid())
+  externalId         String   @unique
+  templateId         String
+  templateTitle      String?
+  title              String
+  status             String
+  source             String?
+  testMode           Boolean  @default(false)
+  isDraft            Boolean  @default(true)
+  metadata           String?
+  createdByUserId    String?
+  createdByUser      User?    @relation("EsignContractCreator", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  signerName         String?
+  signerEmail        String?
+  signerMobile       String?
+  signerCompanyName  String?
+  signPageUrl        String?
+  pdfUrl             String?
+  placeholderValues  Json?
+  signerFieldDefaults Json?
+  signerFieldValues  Json?
+  rawResponse        Json?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([createdAt(sort: Desc)])
+  @@index([createdByUserId])
 }

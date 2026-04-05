@@ -4,7 +4,7 @@ import { Providers } from "@/components/providers";
 
 export const metadata: Metadata = {
   title: "Slash Invoices",
-  description: "Create contacts and send invoices with Slash",
+  description: "Manage contacts, invoices, and contracts from one internal dashboard",
 };
 
 export default function RootLayout({

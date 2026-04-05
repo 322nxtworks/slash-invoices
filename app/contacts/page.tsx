@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useDeferredValue } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Users, Plus, Loader2 } from "lucide-react";
+import { Users, Plus, Loader2, Search, X } from "lucide-react";
 
 interface Contact {
   id: string;
@@ -25,24 +25,43 @@ export default function ContactsPage() {
     recipientEmail: "",
   });
   const [error, setError] = useState("");
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
 
-  const fetchContacts = useCallback(async () => {
+  const fetchContacts = useCallback(async (searchTerm?: string, signal?: AbortSignal) => {
     try {
-      const res = await fetch("/api/contacts");
+      const params = new URLSearchParams();
+      if (searchTerm?.trim()) {
+        params.set("q", searchTerm.trim());
+      }
+
+      const res = await fetch(`/api/contacts${params.size ? `?${params}` : ""}`, {
+        signal,
+      });
       if (res.ok) {
         const data = await res.json();
         setContacts(data.items || []);
       }
-    } catch {
+    } catch (error: unknown) {
+      if (error instanceof DOMException && error.name === "AbortError") {
+        return;
+      }
+
       // No API key yet — that's fine
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   }, []);
 
   useEffect(() => {
-    fetchContacts();
-  }, [fetchContacts]);
+    const controller = new AbortController();
+    setLoading(true);
+    fetchContacts(deferredSearch, controller.signal);
+
+    return () => controller.abort();
+  }, [deferredSearch, fetchContacts]);
 
   async function handleCreate(e: React.FormEvent) {
     e.preventDefault();
@@ -65,7 +84,7 @@ export default function ContactsPage() {
 
       setForm({ name: "", recipientLegalName: "", recipientEmail: "" });
       setShowDialog(false);
-      fetchContacts();
+      fetchContacts(deferredSearch);
     } catch {
       setError("Failed to create contact");
     } finally {
@@ -87,6 +106,33 @@ export default function ContactsPage() {
         </Button>
       </div>
 
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative w-full max-w-md">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search contacts by name"
+            className="pl-9 pr-10"
+          />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+              aria-label="Clear contact search"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+        </div>
+        {search && (
+          <p className="text-sm text-muted-foreground">
+            {loading ? "Searching..." : `${contacts.length} result${contacts.length === 1 ? "" : "s"}`}
+          </p>
+        )}
+      </div>
+
       {/* Table */}
       {loading ? (
         <div className="flex items-center justify-center py-20">
@@ -97,18 +143,32 @@ export default function ContactsPage() {
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted mb-4">
             <Users className="h-6 w-6 text-muted-foreground" />
           </div>
-          <p className="font-medium">No contacts yet</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Add your first customer to start invoicing.
+          <p className="font-medium">
+            {search ? "No contacts found" : "No contacts yet"}
           </p>
-          <Button
-            variant="outline"
-            className="mt-4"
-            onClick={() => setShowDialog(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Contact
-          </Button>
+          <p className="text-sm text-muted-foreground mt-1">
+            {search
+              ? `No contacts match "${search.trim()}".`
+              : "Add your first customer to start invoicing."}
+          </p>
+          {search ? (
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setSearch("")}
+            >
+              Clear Search
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              className="mt-4"
+              onClick={() => setShowDialog(true)}
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Contact
+            </Button>
+          )}
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden">
