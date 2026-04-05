@@ -163,6 +163,8 @@ export default function ContractsPage() {
     () => contacts.find((contact) => contact.id === selectedContactId) || null,
     [contacts, selectedContactId]
   );
+  const placeholderFieldCount = templateDetails?.placeholder_fields?.length || 0;
+  const signerFieldCount = templateDetails?.signer_field_ids?.length || 0;
 
   const fetchContracts = useCallback(async () => {
     try {
@@ -466,171 +468,204 @@ export default function ContractsPage() {
         </div>
       )}
 
-      <div className="grid gap-6 xl:grid-cols-[1.4fr_0.9fr]">
-        <div className="rounded-2xl border border-outline-variant/40 bg-surface-container p-6 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
-          <div className="mb-5 flex items-start justify-between gap-4">
+      <div className="grid gap-6 xl:grid-cols-[1.5fr_0.85fr]">
+        <div className="rounded-3xl border border-outline-variant/40 bg-[linear-gradient(155deg,rgba(77,142,255,0.15),rgba(28,32,40,0.94)_38%,rgba(28,32,40,0.98))] p-6 animate-panel-enter shadow-[0_30px_70px_-44px_rgba(0,0,0,0.95)]">
+          <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
             <div>
-              <h2 className="font-semibold text-white">Create Contract</h2>
-              <p className="text-sm text-outline-stitch">
-                Fill the signer details and the placeholder fields from your
-                shared template.
+              <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary-stitch/90">
+                Contract Composer
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-white">Create Contract</h2>
+              <p className="mt-1 text-sm text-outline-stitch">
+                Configure signer details and template fields, then create a draft
+                or send immediately.
               </p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={openTemplateEditor}
-              disabled={!selectedTemplateId || openingEditor}
-              className="border-outline-variant/50 bg-surface-container-high text-on-surface hover:bg-surface-container-highest"
-            >
-              {openingEditor ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              ) : (
-                <PencilLine className="mr-2 h-4 w-4" />
-              )}
-              Edit Template
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center rounded-full border border-primary-stitch/30 bg-primary-stitch/10 px-3 py-1 text-xs font-medium text-primary-stitch">
+                {placeholderFieldCount} placeholders
+              </span>
+              <span className="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface-container-high/70 px-3 py-1 text-xs font-medium text-outline-stitch">
+                {signerFieldCount} signer fields
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={openTemplateEditor}
+                disabled={!selectedTemplateId || openingEditor}
+                className="border-outline-variant/50 bg-surface-container-high/80 text-on-surface hover:bg-surface-container-highest"
+              >
+                {openingEditor ? (
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                ) : (
+                  <PencilLine className="mr-2 h-4 w-4" />
+                )}
+                Edit Template
+              </Button>
+            </div>
           </div>
 
-          <form onSubmit={handleCreate} className="space-y-5">
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="template">Template</Label>
-                <select
-                  id="template"
-                  value={selectedTemplateId}
-                  onChange={(e) => setSelectedTemplateId(e.target.value)}
-                  className="flex h-11 w-full rounded-xl border border-outline-variant/50 bg-background px-4 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
-                >
-                  {templates.length === 0 && (
-                    <option value="">No templates available</option>
-                  )}
-                  {templates.map((template) => (
-                    <option key={template.template_id} value={template.template_id}>
-                      {template.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="contact">Prefill From Contact</Label>
-                <select
-                  id="contact"
-                  value={selectedContactId}
-                  onChange={(e) => setSelectedContactId(e.target.value)}
-                  className="flex h-11 w-full rounded-xl border border-outline-variant/50 bg-background px-4 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
-                >
-                  <option value="">Choose a contact</option>
-                  {contacts.map((contact) => (
-                    <option key={contact.id} value={contact.id}>
-                      {contact.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="contract-title">Contract Title</Label>
-                <Input
-                  id="contract-title"
-                  placeholder="Optional custom title"
-                  value={form.title}
-                  onChange={(e) =>
-                    setForm((current) => ({ ...current, title: e.target.value }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="metadata">Metadata</Label>
-                <Input
-                  id="metadata"
-                  placeholder="Optional internal reference"
-                  value={form.metadata}
-                  onChange={(e) =>
-                    setForm((current) => ({ ...current, metadata: e.target.value }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="signer-name">Signer Name</Label>
-                <Input
-                  id="signer-name"
-                  value={form.signerName}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      signerName: e.target.value,
-                    }))
-                  }
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signer-email">Signer Email</Label>
-                <Input
-                  id="signer-email"
-                  type="email"
-                  value={form.signerEmail}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      signerEmail: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signer-mobile">Signer Mobile</Label>
-                <Input
-                  id="signer-mobile"
-                  placeholder="+61..."
-                  value={form.signerMobile}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      signerMobile: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="signer-company">Signer Company</Label>
-                <Input
-                  id="signer-company"
-                  value={form.signerCompanyName}
-                  onChange={(e) =>
-                    setForm((current) => ({
-                      ...current,
-                      signerCompanyName: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
-              <div className="mb-3 flex items-center justify-between gap-4">
+          <form onSubmit={handleCreate} className="space-y-4">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <section className="space-y-4 rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
                 <div>
-                  <h3 className="font-medium text-white">Template Placeholder Fields</h3>
-                  <p className="text-sm text-outline-stitch">
-                    These are pulled live from the selected eSignatures template.
+                  <h3 className="text-sm font-semibold text-white">Template Setup</h3>
+                  <p className="text-xs text-outline-stitch">
+                    Pick the template and optionally prefill from a contact.
                   </p>
                 </div>
-                {loadingTemplate && (
-                  <Loader2 className="h-4 w-4 animate-spin text-outline-stitch" />
-                )}
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="template">Template</Label>
+                  <select
+                    id="template"
+                    value={selectedTemplateId}
+                    onChange={(e) => setSelectedTemplateId(e.target.value)}
+                    className="flex h-11 w-full rounded-xl border border-outline-variant/50 bg-background px-4 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
+                  >
+                    {templates.length === 0 && (
+                      <option value="">No templates available</option>
+                    )}
+                    {templates.map((template) => (
+                      <option key={template.template_id} value={template.template_id}>
+                        {template.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="contact">Prefill From Contact</Label>
+                  <select
+                    id="contact"
+                    value={selectedContactId}
+                    onChange={(e) => setSelectedContactId(e.target.value)}
+                    className="flex h-11 w-full rounded-xl border border-outline-variant/50 bg-background px-4 py-2 text-sm text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
+                  >
+                    <option value="">Choose a contact</option>
+                    {contacts.map((contact) => (
+                      <option key={contact.id} value={contact.id}>
+                        {contact.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="contract-title">Contract Title</Label>
+                    <Input
+                      id="contract-title"
+                      placeholder="Optional custom title"
+                      value={form.title}
+                      onChange={(e) =>
+                        setForm((current) => ({ ...current, title: e.target.value }))
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="metadata">Metadata</Label>
+                    <Input
+                      id="metadata"
+                      placeholder="Optional internal reference"
+                      value={form.metadata}
+                      onChange={(e) =>
+                        setForm((current) => ({ ...current, metadata: e.target.value }))
+                      }
+                    />
+                  </div>
+                </div>
+              </section>
+
+              <section className="space-y-4 rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Signer Details</h3>
+                  <p className="text-xs text-outline-stitch">
+                    These details are used for signature delivery and tracking.
+                  </p>
+                </div>
+                <div className="grid gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signer-name">Signer Name</Label>
+                    <Input
+                      id="signer-name"
+                      value={form.signerName}
+                      onChange={(e) =>
+                        setForm((current) => ({
+                          ...current,
+                          signerName: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signer-email">Signer Email</Label>
+                    <Input
+                      id="signer-email"
+                      type="email"
+                      value={form.signerEmail}
+                      onChange={(e) =>
+                        setForm((current) => ({
+                          ...current,
+                          signerEmail: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="signer-mobile">Signer Mobile</Label>
+                      <Input
+                        id="signer-mobile"
+                        placeholder="+61..."
+                        value={form.signerMobile}
+                        onChange={(e) =>
+                          setForm((current) => ({
+                            ...current,
+                            signerMobile: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="signer-company">Signer Company</Label>
+                      <Input
+                        id="signer-company"
+                        value={form.signerCompanyName}
+                        onChange={(e) =>
+                          setForm((current) => ({
+                            ...current,
+                            signerCompanyName: e.target.value,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
+
+            <details open className="rounded-2xl border border-outline-variant/40 bg-surface-container-low/70">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Template Placeholder Fields</h3>
+                  <p className="text-xs text-outline-stitch">
+                    Values injected directly into your selected template.
+                  </p>
+                </div>
+                <span className="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface-container-high/80 px-3 py-1 text-xs text-outline-stitch">
+                  {loadingTemplate ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    `${placeholderFieldCount} fields`
+                  )}
+                </span>
+              </summary>
 
               {templateDetails?.placeholder_fields?.length ? (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 border-t border-outline-variant/30 p-4 md:grid-cols-2">
                   {templateDetails.placeholder_fields.map((key) => (
-                    <div key={key} className="space-y-2">
+                    <div key={key} className="space-y-2 rounded-xl border border-outline-variant/25 bg-background/40 p-3">
                       <Label htmlFor={`placeholder-${key}`}>{humanizeKey(key)}</Label>
                       <Input
                         id={`placeholder-${key}`}
@@ -652,22 +687,29 @@ export default function ContractsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-outline-stitch">
+                <p className="border-t border-outline-variant/30 px-4 py-4 text-sm text-outline-stitch">
                   This template does not expose placeholder fields.
                 </p>
               )}
-            </div>
+            </details>
 
-            <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 smooth-transition">
-              <h3 className="font-medium text-white">Signer Field Defaults</h3>
-              <p className="mb-3 text-sm text-outline-stitch">
-                Pre-fill any signer fields you added to the template editor.
-              </p>
+            <details className="rounded-2xl border border-outline-variant/40 bg-surface-container-low/70">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3">
+                <div>
+                  <h3 className="text-sm font-semibold text-white">Signer Field Defaults</h3>
+                  <p className="text-xs text-outline-stitch">
+                    Optional defaults for signer input fields.
+                  </p>
+                </div>
+                <span className="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface-container-high/80 px-3 py-1 text-xs text-outline-stitch">
+                  {signerFieldCount} fields
+                </span>
+              </summary>
 
               {templateDetails?.signer_field_ids?.length ? (
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 border-t border-outline-variant/30 p-4 md:grid-cols-2">
                   {templateDetails.signer_field_ids.map((key) => (
-                    <div key={key} className="space-y-2">
+                    <div key={key} className="space-y-2 rounded-xl border border-outline-variant/25 bg-background/40 p-3">
                       <Label htmlFor={`signer-field-${key}`}>{humanizeKey(key)}</Label>
                       <Input
                         id={`signer-field-${key}`}
@@ -684,30 +726,28 @@ export default function ContractsPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-outline-stitch">
+                <p className="border-t border-outline-variant/30 px-4 py-4 text-sm text-outline-stitch">
                   No signer field IDs were returned for this template yet.
                 </p>
               )}
-            </div>
+            </details>
 
-            <label className="flex items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low px-4 py-3 text-sm text-on-surface smooth-transition">
-              <input
-                type="checkbox"
-                checked={form.saveAsDraft}
-                onChange={(e) =>
-                  setForm((current) => ({
-                    ...current,
-                    saveAsDraft: e.target.checked,
-                  }))
-                }
-                className="h-4 w-4 rounded border-outline-variant/50 bg-background"
-              />
-              <span>
-                Save as draft first instead of sending immediately
-              </span>
-            </label>
+            <div className="flex flex-col gap-4 rounded-2xl border border-outline-variant/40 bg-surface-container-low/70 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+              <label className="flex items-center gap-3 text-sm text-on-surface">
+                <input
+                  type="checkbox"
+                  checked={form.saveAsDraft}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      saveAsDraft: e.target.checked,
+                    }))
+                  }
+                  className="h-4 w-4 rounded border-outline-variant/50 bg-background"
+                />
+                <span>Save as draft first instead of sending immediately</span>
+              </label>
 
-            <div className="flex justify-end">
               <Button
                 type="submit"
                 disabled={creating || !selectedTemplateId}
@@ -727,22 +767,24 @@ export default function ContractsPage() {
         </div>
 
         <div className="space-y-6">
-          <div className="rounded-2xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+          <div className="rounded-3xl border border-outline-variant/40 bg-[linear-gradient(175deg,rgba(77,142,255,0.13),rgba(28,32,40,0.95)_48%)] p-5 animate-panel-enter shadow-[0_24px_60px_-38px_rgba(0,0,0,0.95)]">
             <h2 className="font-semibold text-white">Selected Template</h2>
             <p className="mt-1 text-sm text-outline-stitch">
               {templateDetails?.title || "No template selected"}
             </p>
-            <div className="mt-4 space-y-3 text-sm text-outline-stitch">
-              <div className="flex items-center justify-between gap-4">
-                <span>Placeholder fields</span>
-                <span>{templateDetails?.placeholder_fields?.length || 0}</span>
+
+            <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-outline-variant/35 bg-surface-container-low/70 p-3">
+                <p className="text-[11px] uppercase tracking-wider text-outline-stitch">Placeholders</p>
+                <p className="mt-1 text-lg font-semibold text-white">{placeholderFieldCount}</p>
               </div>
-              <div className="flex items-center justify-between gap-4">
-                <span>Signer defaults</span>
-                <span>{templateDetails?.signer_field_ids?.length || 0}</span>
+              <div className="rounded-xl border border-outline-variant/35 bg-surface-container-low/70 p-3">
+                <p className="text-[11px] uppercase tracking-wider text-outline-stitch">Signer Fields</p>
+                <p className="mt-1 text-lg font-semibold text-white">{signerFieldCount}</p>
               </div>
             </div>
-            <div className="mt-4 flex gap-3">
+
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button
                 type="button"
                 variant="outline"
@@ -770,12 +812,21 @@ export default function ContractsPage() {
             </div>
           </div>
 
-          <div className="rounded-2xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
+          <div className="rounded-3xl border border-outline-variant/40 bg-surface-container p-5 animate-panel-enter shadow-[0_18px_40px_-26px_rgba(0,0,0,0.8)]">
             <h2 className="font-semibold text-white">Safety Defaults</h2>
             <ul className="mt-3 space-y-2 text-sm text-outline-stitch">
-              <li>Live contracts only. Demo mode stays off.</li>
-              <li>Draft-first is enabled by default for safer review.</li>
-              <li>Contract status sync can be refreshed manually or by webhook.</li>
+              <li className="flex items-start gap-2">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-primary-stitch" />
+                <span>Live contracts only. Demo mode stays off.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-primary-stitch" />
+                <span>Draft-first is enabled by default for safer review.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="mt-2 h-1.5 w-1.5 rounded-full bg-primary-stitch" />
+                <span>Contract status sync can be refreshed manually or by webhook.</span>
+              </li>
             </ul>
           </div>
         </div>
