@@ -90,6 +90,7 @@ export async function POST(req: Request) {
     const signerEmail = normalizeOptionalString(body.signerEmail)?.toLowerCase();
     const signerMobile = normalizeOptionalString(body.signerMobile);
     const signerCompanyName = normalizeOptionalString(body.signerCompanyName);
+    const autoSignMyEnd = body.autoSignMyEnd !== false;
     const saveAsDraft = body.saveAsDraft !== false;
     const placeholderValues = normalizeKeyValueMap(body.placeholderValues);
     const signerFieldDefaults = normalizeKeyValueMap(body.signerFieldDefaults);
@@ -138,6 +139,7 @@ export async function POST(req: Request) {
           ...(signerEmail ? { email: signerEmail } : {}),
           ...(signerMobile ? { mobile: signerMobile } : {}),
           ...(signerCompanyName ? { company_name: signerCompanyName } : {}),
+          auto_sign: autoSignMyEnd ? "yes" : "no",
         },
       ],
       ...(Object.keys(placeholderValues).length > 0

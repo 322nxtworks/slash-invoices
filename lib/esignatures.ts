@@ -67,6 +67,7 @@ interface CreateContractPayload {
     email?: string;
     mobile?: string;
     company_name?: string;
+    auto_sign?: "yes" | "no";
   }>;
   placeholder_fields?: Array<{
     placeholder_key: string;
