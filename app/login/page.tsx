@@ -59,16 +59,16 @@ export default function LoginPage() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="w-full max-w-sm space-y-6 p-6">
+      <div className="w-full max-w-sm space-y-6 p-8 rounded-lg bg-surface-container border-0 shadow-2xl shadow-black/50">
         {/* Logo */}
         <div className="flex flex-col items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-xl">
+          <div className="flex h-12 w-12 items-center justify-center rounded-md bg-gradient-to-br from-primary-stitch to-primary-container text-white font-bold text-xl shadow-lg shadow-primary-stitch/20">
             /
           </div>
           <div className="text-center">
-            <h1 className="text-xl font-semibold">Slash Invoices</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              {isRegister ? "Create an account to get started" : "Sign in to manage your invoices"}
+            <h1 className="text-[20px] font-semibold text-white">Slash Invoices</h1>
+            <p className="text-sm text-outline-stitch mt-1">
+              {isRegister ? "Create an account to get started" : "Obsidian Ledger v4.0.2"}
             </p>
           </div>
         </div>
@@ -77,17 +77,18 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-4">
           {isRegister && (
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="text-xs uppercase text-outline-stitch tracking-wider font-medium">Name</Label>
               <Input
                 id="name"
                 placeholder="Your name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
+                className="bg-background border-outline-variant/30 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch rounded-md"
               />
             </div>
           )}
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email" className="text-xs uppercase text-outline-stitch tracking-wider font-medium">Email</Label>
             <Input
               id="email"
               type="email"
@@ -95,10 +96,11 @@ export default function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-background border-outline-variant/30 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch rounded-md"
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
+            <Label htmlFor="password" className="text-xs uppercase text-outline-stitch tracking-wider font-medium">Password</Label>
             <Input
               id="password"
               type="password"
@@ -107,16 +109,17 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={isRegister ? 8 : undefined}
+              className="bg-background border-outline-variant/30 focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch rounded-md"
             />
           </div>
 
           {error && (
-            <p className="text-sm text-red-400 bg-red-400/10 rounded-md px-3 py-2">
+            <p className="text-sm text-error-stitch bg-error-container/20 border border-error-container/30 rounded-md px-3 py-2">
               {error}
             </p>
           )}
 
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="w-full bg-gradient-to-br from-primary-stitch to-primary-container text-white rounded-md border-0 hover:opacity-90 shadow-[0_4px_14px_0_rgba(173,198,255,0.15)] transition-all" disabled={loading}>
             {loading
               ? "Please wait..."
               : isRegister
@@ -125,7 +128,7 @@ export default function LoginPage() {
           </Button>
         </form>
 
-        <div className="text-center text-sm text-muted-foreground">
+        <div className="text-center text-sm text-outline-stitch">
           {isRegister ? (
             <>
               Already have an account?{" "}
@@ -134,22 +137,22 @@ export default function LoginPage() {
                   setIsRegister(false);
                   setError("");
                 }}
-                className="text-primary hover:underline font-medium"
+                className="text-primary-stitch hover:text-white transition-colors font-medium underline underline-offset-4"
               >
                 Sign in
               </button>
             </>
           ) : (
             <>
-              No account yet?{" "}
+              New to the ledger?{" "}
               <button
                 onClick={() => {
                   setIsRegister(true);
                   setError("");
                 }}
-                className="text-primary hover:underline font-medium"
+                className="text-primary-stitch hover:text-white transition-colors font-medium underline underline-offset-4"
               >
-                Create one
+                Create account
               </button>
             </>
           )}

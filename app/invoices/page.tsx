@@ -75,15 +75,15 @@ const STATUS_TABS = [
 ];
 
 function statusBadge(status: string) {
-  const map: Record<string, { variant: "success" | "warning" | "danger" | "muted" | "default"; label: string }> = {
-    paid: { variant: "success", label: "Paid" },
-    unpaid: { variant: "warning", label: "Unpaid" },
-    paid_partially: { variant: "warning", label: "Partial" },
-    overdue: { variant: "danger", label: "Overdue" },
-    void: { variant: "muted", label: "Void" },
+  const map: Record<string, { bg: string; text: string; label: string }> = {
+    paid: { bg: "bg-emerald-500/10", text: "text-emerald-500", label: "Paid" },
+    unpaid: { bg: "bg-amber-500/10", text: "text-amber-500", label: "Unpaid" },
+    paid_partially: { bg: "bg-amber-500/10", text: "text-amber-500", label: "Partial" },
+    overdue: { bg: "bg-error-stitch/10", text: "text-error-stitch", label: "Overdue" },
+    void: { bg: "bg-outline-variant/30", text: "text-outline-stitch", label: "Void" },
   };
-  const s = map[status] || { variant: "default" as const, label: status };
-  return <Badge variant={s.variant}>{s.label}</Badge>;
+  const s = map[status] || { bg: "bg-outline-variant/30", text: "text-outline-stitch", label: status };
+  return <span className={`inline-flex items-center rounded-sm px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${s.bg} ${s.text}`}>{s.label}</span>;
 }
 
 function today() {
@@ -397,19 +397,19 @@ export default function InvoicesPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <FileText className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-xl font-semibold">Invoices</h1>
+          <FileText className="h-6 w-6 text-primary-stitch" />
+          <h1 className="text-2xl font-semibold text-white tracking-tight">Invoices</h1>
         </div>
         <div className="flex items-center gap-2">
           {visibleInvoices.length > 0 && (
-            <Button variant="outline" onClick={exportCsv}>
+            <Button variant="outline" className="border-0 bg-surface-variant text-white hover:bg-surface-container-high rounded-md" onClick={exportCsv}>
               <Download className="h-4 w-4 mr-2" />
               Export CSV
             </Button>
           )}
-          <Button onClick={() => setShowDialog(true)}>
+          <Button className="bg-gradient-to-br from-primary-stitch to-primary-container text-white border-0 hover:opacity-90 rounded-md shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]" onClick={() => setShowDialog(true)}>
             <Plus className="h-4 w-4 mr-2" />
             New Invoice
           </Button>
@@ -530,34 +530,34 @@ export default function InvoicesPage() {
           </Button>
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
-          <table className="w-full">
+        <div className="rounded-md bg-surface-container-low p-2">
+          <table className="w-full border-spacing-y-2 border-separate">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <tr>
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Invoice #
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Customer
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Issued
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Due
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-right px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Amount
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-right px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-right px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Link
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody>
               {visibleInvoices.map((item) => {
                 const isExpanded = expandedInvoiceId === item.invoice.id;
                 const fallbackLink =
@@ -570,33 +570,33 @@ export default function InvoicesPage() {
                 return (
                   <Fragment key={item.invoice.id}>
                     <tr
-                      className="cursor-pointer hover:bg-muted/30 transition-colors"
+                      className="cursor-pointer bg-surface-container hover:bg-surface-container-high transition-colors group"
                       onClick={() =>
                         setExpandedInvoiceId((current) =>
                           current === item.invoice.id ? null : item.invoice.id
                         )
                       }
                     >
-                      <td className="px-4 py-3 text-sm font-medium">
+                      <td className="px-4 py-3 text-sm font-medium rounded-l-md">
                         <div className="flex items-center gap-2">
                           {isExpanded ? (
-                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            <ChevronDown className="h-4 w-4 text-outline-stitch" />
                           ) : (
-                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            <ChevronRight className="h-4 w-4 text-outline-stitch" />
                           )}
                           <span>{item.invoiceDetails.invoiceNumber || item.invoice.id}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-on-surface">
                         {item.invoiceDetails.billedTo?.name || "—"}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="px-4 py-3 text-sm text-outline-stitch tabular-nums">
                         {formatDate(item.invoiceDetails.issuedAt)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="px-4 py-3 text-sm text-outline-stitch tabular-nums">
                         {formatDate(item.invoiceDetails.dueAt)}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right font-mono">
+                      <td className="px-4 py-3 text-sm text-right font-mono text-white tabular-nums">
                         {formatCurrency(
                           item.invoiceDetails.lineItemsAndTotals?.totalAmountCents || 0
                         )}
@@ -604,11 +604,11 @@ export default function InvoicesPage() {
                       <td className="px-4 py-3">
                         {statusBadge(item.invoice.status)}
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex justify-end">
+                      <td className="px-4 py-3 rounded-r-md">
+                        <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button
                             type="button"
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
                             onClick={(event) => {
                               event.stopPropagation();
