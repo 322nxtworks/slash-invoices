@@ -95,12 +95,17 @@ export default function ContactsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center gap-3">
-          <Users className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-xl font-semibold">Contacts</h1>
+          <Users className="h-6 w-6 text-primary-stitch" />
+          <h1 className="text-2xl font-semibold text-white tracking-tight">
+            Contacts
+          </h1>
         </div>
-        <Button onClick={() => setShowDialog(true)}>
+        <Button
+          className="bg-gradient-to-br from-primary-stitch to-primary-container text-on-primary-fixed border-0 hover:opacity-90 rounded-md shadow-[0_4px_14px_0_rgba(173,198,255,0.15)]"
+          onClick={() => setShowDialog(true)}
+        >
           <Plus className="h-4 w-4 mr-2" />
           New Contact
         </Button>
@@ -113,7 +118,7 @@ export default function ContactsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search contacts by name"
-            className="pl-9 pr-10"
+            className="pl-9 pr-10 bg-background border-outline-variant/50 rounded-md focus-visible:ring-primary-stitch focus-visible:ring-offset-0 focus-visible:border-primary-stitch"
           />
           {search && (
             <button
@@ -171,29 +176,34 @@ export default function ContactsPage() {
           )}
         </div>
       ) : (
-        <div className="rounded-lg border border-border overflow-hidden">
+        <div className="rounded-md bg-surface-container-low p-2">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+              <tr className="border-b border-outline-variant/40 bg-surface-container">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Name
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Legal Name
                 </th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <th className="text-left px-4 py-3 text-[11px] font-medium text-outline-stitch uppercase tracking-wider">
                   Email
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-outline-variant/30">
               {contacts.map((c) => (
-                <tr key={c.id} className="hover:bg-muted/30 transition-colors">
-                  <td className="px-4 py-3 text-sm font-medium">{c.name}</td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                <tr
+                  key={c.id}
+                  className="bg-surface-container hover:bg-surface-container-high transition-colors"
+                >
+                  <td className="px-4 py-3 text-sm font-medium text-on-surface">
+                    {c.name}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-outline-stitch">
                     {c.recipientLegalName || "—"}
                   </td>
-                  <td className="px-4 py-3 text-sm text-muted-foreground">
+                  <td className="px-4 py-3 text-sm text-outline-stitch">
                     {c.recipientEmail}
                   </td>
                 </tr>
