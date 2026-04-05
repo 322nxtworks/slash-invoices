@@ -1,0 +1,34 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx prisma:*)",
+      "Bash(npm run:*)",
+      "Bash(git init:*)",
+      "Bash(git branch:*)",
+      "Bash(rm .env)",
+      "Bash(git add:*)",
+      "Bash(git commit -m ':*)",
+      "Bash(git config:*)",
+      "Bash(gh api:*)",
+      "Bash(gh repo:*)",
+      "Bash(vercel link:*)",
+      "Bash(vercel env:*)",
+      "Bash(vercel stores:*)",
+      "Bash(vercel integration:*)",
+      "Bash(vercel postgres:*)",
+      "Bash(npx -y neonctl --version)",
+      "Bash(openssl rand:*)",
+      "Bash(neonctl auth:*)",
+      "Bash(neonctl me:*)",
+      "Bash(vercel --help)",
+      "Bash(vercel deploy:*)",
+      "Bash(open \"https://vercel.com/matts-projects-542421e5/slash-app/stores\")",
+      "Bash(wait)",
+      "Bash(neonctl projects:*)",
+      "Bash(git push:*)"
+    ],
+    "additionalDirectories": [
+      "/Users/nxtworks/Desktop/slash-app"
+    ]
+  }
+}
