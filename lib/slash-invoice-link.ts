@@ -115,14 +115,14 @@ export function buildSlashInvoiceLinkFromIdentifiers({
   const normalizedInvoiceId =
     typeof invoiceId === "string" && invoiceId.trim() ? invoiceId.trim() : null;
 
-  if (normalizedDocumentId) {
-    const encodedDocumentId = encodeURIComponent(normalizedDocumentId);
-    return `${APP_SLASH_ORIGIN}/invoice/${encodedDocumentId}`;
-  }
-
   if (normalizedInvoiceId) {
     const encodedInvoiceId = encodeURIComponent(normalizedInvoiceId);
     return `${APP_SLASH_ORIGIN}/invoice/${encodedInvoiceId}`;
+  }
+
+  if (normalizedDocumentId) {
+    const encodedDocumentId = encodeURIComponent(normalizedDocumentId);
+    return `${APP_SLASH_ORIGIN}/invoice/${encodedDocumentId}`;
   }
 
   return null;
