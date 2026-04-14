@@ -1,5 +1,24 @@
 const SLASH_BASE = "https://api.joinslash.com";
 
+export const KNOWN_INVOICE_PAYMENT_METHODS = [
+  "ach_debit",
+  "crypto_deposit",
+  "inbound_ach_transfer",
+  "inbound_international_wire",
+  "inbound_rtp",
+  "inbound_wire_transfer",
+] as const;
+
+export type InvoicePaymentMethodType =
+  (typeof KNOWN_INVOICE_PAYMENT_METHODS)[number];
+
+export interface InvoicePaymentMethod {
+  method: InvoicePaymentMethodType;
+  config?: {
+    passFeeToPayer?: boolean;
+  };
+}
+
 export class SlashApiError extends Error {
   status: number;
   constructor(message: string, status: number) {
@@ -126,6 +145,7 @@ export async function createInvoice(
   data: {
     accountId: string;
     legalEntityContactId: string;
+    paymentMethods?: InvoicePaymentMethod[];
     details: {
       issuedAt: string;
       dueAt: string;

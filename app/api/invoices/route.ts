@@ -6,9 +6,20 @@ import {
   badRequest,
   upstreamError,
 } from "@/lib/session";
-import { listInvoices, createInvoice } from "@/lib/slash-api";
+import {
+  listInvoices,
+  createInvoice,
+  getInvoiceSettings,
+  KNOWN_INVOICE_PAYMENT_METHODS,
+  type InvoicePaymentMethod,
+  type InvoicePaymentMethodType,
+} from "@/lib/slash-api";
 import { extractSlashInvoiceLink } from "@/lib/slash-invoice-link";
 import { DEFAULT_INVOICE_TIME_ZONE } from "@/lib/utils";
+
+const DEFAULT_NON_CRYPTO_PAYMENT_METHOD: InvoicePaymentMethodType =
+  "inbound_ach_transfer";
+const CRYPTO_PAYMENT_METHOD: InvoicePaymentMethodType = "crypto_deposit";
 
 function normalizeDate(value: unknown) {
   if (typeof value !== "string") return null;
@@ -23,6 +34,80 @@ function normalizeOptionalText(value: unknown) {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isKnownPaymentMethod(
+  value: unknown
+): value is InvoicePaymentMethodType {
+  return (
+    typeof value === "string" &&
+    KNOWN_INVOICE_PAYMENT_METHODS.includes(value as InvoicePaymentMethodType)
+  );
+}
+
+function parsePaymentMethodList(value: unknown): InvoicePaymentMethod[] {
+  if (!Array.isArray(value)) return [];
+
+  const parsed: InvoicePaymentMethod[] = [];
+  for (const item of value) {
+    if (!isRecord(item) || !isKnownPaymentMethod(item.method)) continue;
+
+    const method: InvoicePaymentMethod = { method: item.method };
+    if (isRecord(item.config) && typeof item.config.passFeeToPayer === "boolean") {
+      method.config = {
+        passFeeToPayer: item.config.passFeeToPayer,
+      };
+    }
+    parsed.push(method);
+  }
+  return parsed;
+}
+
+function extractInvoicePaymentMethods(settingsData: unknown): InvoicePaymentMethod[] {
+  if (!isRecord(settingsData)) return [];
+
+  const candidates: unknown[] = [settingsData.paymentMethods];
+
+  if (isRecord(settingsData.settings)) {
+    candidates.push(settingsData.settings.paymentMethods);
+    candidates.push(settingsData.settings.defaultPaymentMethods);
+  }
+  if (isRecord(settingsData.invoiceSettings)) {
+    candidates.push(settingsData.invoiceSettings.paymentMethods);
+    if (isRecord(settingsData.invoiceSettings.settings)) {
+      candidates.push(settingsData.invoiceSettings.settings.paymentMethods);
+      candidates.push(settingsData.invoiceSettings.settings.defaultPaymentMethods);
+    }
+  }
+
+  const deduped = new Map<InvoicePaymentMethodType, InvoicePaymentMethod>();
+  for (const candidate of candidates) {
+    for (const method of parsePaymentMethodList(candidate)) {
+      deduped.set(method.method, method);
+    }
+  }
+
+  return Array.from(deduped.values());
+}
+
+function buildInvoicePaymentMethods(
+  settingsData: unknown,
+  includeCrypto: boolean
+): InvoicePaymentMethod[] {
+  const configured = extractInvoicePaymentMethods(settingsData);
+  const withoutCrypto = configured.filter(
+    (method) => method.method !== CRYPTO_PAYMENT_METHOD
+  );
+  const baseMethods =
+    withoutCrypto.length > 0
+      ? withoutCrypto
+      : [{ method: DEFAULT_NON_CRYPTO_PAYMENT_METHOD }];
+
+  if (!includeCrypto) {
+    return baseMethods;
+  }
+
+  return [...baseMethods, { method: CRYPTO_PAYMENT_METHOD }];
 }
 
 export async function GET(req: Request) {
@@ -101,6 +186,7 @@ export async function POST(req: Request) {
       tax,
       invoiceNumber,
       memo,
+      includeCrypto,
     } = body;
 
     const normalizedContactId =
@@ -117,6 +203,7 @@ export async function POST(req: Request) {
         : undefined;
     const normalizedTax =
       typeof tax === "number" && Number.isFinite(tax) ? tax : undefined;
+    const normalizedIncludeCrypto = includeCrypto === true;
     const normalizedLineItems = Array.isArray(lineItems)
       ? lineItems
           .map((item) => {
@@ -159,9 +246,14 @@ export async function POST(req: Request) {
       return badRequest("Tax must be between 0 and 100");
     }
 
+    const invoiceSettings = await getInvoiceSettings(apiKey).catch(() => null);
     const data = await createInvoice(apiKey, {
       accountId: user.accountId,
       legalEntityContactId: normalizedContactId,
+      paymentMethods: buildInvoicePaymentMethods(
+        invoiceSettings,
+        normalizedIncludeCrypto
+      ),
       details: {
         issuedAt: normalizedIssuedAt,
         dueAt: normalizedDueAt,

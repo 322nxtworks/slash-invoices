@@ -119,6 +119,7 @@ export default function InvoicesPage() {
   const [memo, setMemo] = useState("");
   const [discount, setDiscount] = useState(0);
   const [tax, setTax] = useState(0);
+  const [includeCrypto, setIncludeCrypto] = useState(false);
   const [lineItems, setLineItems] = useState<LineItem[]>([
     { name: "", quantity: 1, price: 0 },
   ]);
@@ -232,6 +233,7 @@ export default function InvoicesPage() {
     setMemo("");
     setDiscount(0);
     setTax(0);
+    setIncludeCrypto(false);
     setLineItems([{ name: "", quantity: 1, price: 0 }]);
     setError("");
   }
@@ -260,6 +262,7 @@ export default function InvoicesPage() {
           tax: tax > 0 ? tax : undefined,
           invoiceNumber: invoiceNumber || undefined,
           memo: memo || undefined,
+          includeCrypto,
         }),
       });
 
@@ -872,6 +875,25 @@ export default function InvoicesPage() {
                         </div>
                       </div>
                     </div>
+                  </div>
+
+                  <div className="rounded-2xl border border-outline-variant/35 bg-surface-container-low/70 p-4">
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={includeCrypto}
+                        onChange={(e) => setIncludeCrypto(e.target.checked)}
+                        className="mt-0.5 h-4 w-4 rounded border-outline-variant bg-background"
+                      />
+                      <span>
+                        <span className="block text-sm font-medium text-white">
+                          Enable crypto payment option
+                        </span>
+                        <span className="block text-xs text-outline-stitch mt-0.5">
+                          When enabled, this invoice will include Slash crypto deposit as a payment method.
+                        </span>
+                      </span>
+                    </label>
                   </div>
 
                   {/* Memo */}
