@@ -14,7 +14,7 @@ export type InvoicePaymentMethodType =
 
 export interface InvoicePaymentMethod {
   method: InvoicePaymentMethodType;
-  config?: {
+  config: {
     passFeeToPayer?: boolean;
   };
 }

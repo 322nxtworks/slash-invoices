@@ -52,11 +52,12 @@ function parsePaymentMethodList(value: unknown): InvoicePaymentMethod[] {
   for (const item of value) {
     if (!isRecord(item) || !isKnownPaymentMethod(item.method)) continue;
 
-    const method: InvoicePaymentMethod = { method: item.method };
+    const method: InvoicePaymentMethod = {
+      method: item.method,
+      config: {},
+    };
     if (isRecord(item.config) && typeof item.config.passFeeToPayer === "boolean") {
-      method.config = {
-        passFeeToPayer: item.config.passFeeToPayer,
-      };
+      method.config.passFeeToPayer = item.config.passFeeToPayer;
     }
     parsed.push(method);
   }
@@ -98,16 +99,16 @@ function buildInvoicePaymentMethods(
   const withoutCrypto = configured.filter(
     (method) => method.method !== CRYPTO_PAYMENT_METHOD
   );
-  const baseMethods =
+  const baseMethods: InvoicePaymentMethod[] =
     withoutCrypto.length > 0
       ? withoutCrypto
-      : [{ method: DEFAULT_NON_CRYPTO_PAYMENT_METHOD }];
+      : [{ method: DEFAULT_NON_CRYPTO_PAYMENT_METHOD, config: {} }];
 
   if (!includeCrypto) {
     return baseMethods;
   }
 
-  return [...baseMethods, { method: CRYPTO_PAYMENT_METHOD }];
+  return [...baseMethods, { method: CRYPTO_PAYMENT_METHOD, config: {} }];
 }
 
 export async function GET(req: Request) {
