@@ -184,7 +184,7 @@ export async function POST(req: Request) {
 
     const data = await createInvoice(apiKey, {
       accountId: user.accountId,
-      legalEntityContactId: normalizedContactId,
+      legalEntityCustomerId: normalizedContactId,
       paymentMethods: buildInvoicePaymentMethods(normalizedIncludeCrypto),
       details: {
         issuedAt: normalizedIssuedAt,

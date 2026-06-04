@@ -1,4 +1,4 @@
-const SLASH_BASE = "https://api.joinslash.com";
+const SLASH_BASE = "https://api.slash.com";
 
 export const KNOWN_INVOICE_PAYMENT_METHODS = [
   "ach_debit",
@@ -125,7 +125,7 @@ export async function listInvoices(
   if (params?.legalEntityId) search.set("filter:legalEntityId", params.legalEntityId);
   if (params?.status) search.set("filter:status", params.status);
   if (params?.contactId) {
-    search.set("filter:legalEntityContactId", params.contactId);
+    search.set("filter:legalEntityCustomerId", params.contactId);
   }
   if (params?.accountId) search.set("filter:accountId", params.accountId);
   if (params?.sort) search.set("sort", params.sort);
@@ -144,7 +144,7 @@ export async function createInvoice(
   apiKey: string,
   data: {
     accountId: string;
-    legalEntityContactId: string;
+    legalEntityCustomerId: string;
     paymentMethods?: InvoicePaymentMethod[];
     details: {
       issuedAt: string;
