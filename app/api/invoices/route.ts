@@ -111,10 +111,13 @@ export async function POST(req: Request) {
     if (!user.accountId) {
       return badRequest("No account selected — go to Settings first");
     }
+    if (!user.legalEntityId) {
+      return badRequest("No legal entity selected — go to Settings first");
+    }
 
     const body = await req.json();
     const {
-      legalEntityContactId,
+      legalEntityCustomerId,
       issuedAt,
       dueAt,
       lineItems,
@@ -125,9 +128,9 @@ export async function POST(req: Request) {
       includeCrypto,
     } = body;
 
-    const normalizedContactId =
-      typeof legalEntityContactId === "string"
-        ? legalEntityContactId.trim()
+    const normalizedCustomerId =
+      typeof legalEntityCustomerId === "string"
+        ? legalEntityCustomerId.trim()
         : "";
     const normalizedIssuedAt = normalizeDate(issuedAt);
     const normalizedDueAt = normalizeDate(dueAt);
@@ -163,8 +166,8 @@ export async function POST(req: Request) {
           .filter((item): item is { name: string; quantity: number; priceCents: number } => Boolean(item))
       : [];
 
-    if (!normalizedContactId || normalizedLineItems.length === 0) {
-      return badRequest("Contact and at least one line item are required");
+    if (!normalizedCustomerId || normalizedLineItems.length === 0) {
+      return badRequest("Customer and at least one line item are required");
     }
     if (!normalizedIssuedAt || !normalizedDueAt) {
       return badRequest("Issue date and due date must be valid dates");
@@ -184,7 +187,7 @@ export async function POST(req: Request) {
 
     const data = await createInvoice(apiKey, {
       accountId: user.accountId,
-      legalEntityCustomerId: normalizedContactId,
+      legalEntityCustomerId: normalizedCustomerId,
       paymentMethods: buildInvoicePaymentMethods(normalizedIncludeCrypto),
       details: {
         issuedAt: normalizedIssuedAt,
@@ -203,6 +206,8 @@ export async function POST(req: Request) {
         ...(normalizedMemo ? { memo: normalizedMemo } : {}),
         version: 2,
       },
+    }, {
+      legalEntityId: user.legalEntityId,
     });
 
     if (!isRecord(data)) {

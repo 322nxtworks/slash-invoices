@@ -38,7 +38,7 @@ interface InvoiceItem {
     id: string;
     status: string;
     collectedAmountCents: number;
-    legalEntityContactId: string;
+    legalEntityCustomerId: string;
   };
   invoiceDetails: {
     id?: string;
@@ -248,7 +248,7 @@ export default function InvoicesPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          legalEntityContactId: contactId,
+          legalEntityCustomerId: contactId,
           issuedAt,
           dueAt,
           lineItems: lineItems

@@ -30,14 +30,16 @@ export class SlashApiError extends Error {
 async function slashFetch(
   path: string,
   apiKey: string,
-  options?: RequestInit
+  options?: RequestInit & { legalEntityId?: string }
 ): Promise<Response> {
+  const { legalEntityId, ...fetchOptions } = options || {};
   const res = await fetch(`${SLASH_BASE}${path}`, {
-    ...options,
+    ...fetchOptions,
     headers: {
       "X-API-Key": apiKey,
       "Content-Type": "application/json",
-      ...(options?.headers || {}),
+      ...(legalEntityId ? { "x-legal-entity": legalEntityId } : {}),
+      ...(fetchOptions.headers || {}),
     },
   });
 
@@ -67,7 +69,9 @@ export async function listAccounts(
   }
 
   const qs = search.toString();
-  const res = await slashFetch(`/account${qs ? `?${qs}` : ""}`, apiKey);
+  const res = await slashFetch(`/account${qs ? `?${qs}` : ""}`, apiKey, {
+    legalEntityId: params?.legalEntityId,
+  });
   return res.json();
 }
 
@@ -84,7 +88,9 @@ export async function listContacts(
   }
 
   const qs = search.toString();
-  const res = await slashFetch(`/contact${qs ? `?${qs}` : ""}`, apiKey);
+  const res = await slashFetch(`/contact${qs ? `?${qs}` : ""}`, apiKey, {
+    legalEntityId: params?.legalEntityId,
+  });
   return res.json();
 }
 
@@ -105,6 +111,7 @@ export async function createContact(
   const qs = search.toString();
   const res = await slashFetch(`/contact${qs ? `?${qs}` : ""}`, apiKey, {
     method: "POST",
+    legalEntityId: params?.legalEntityId,
     body: JSON.stringify({ ...data, recipientType: "contact" }),
   });
   return res.json();
@@ -131,12 +138,20 @@ export async function listInvoices(
   if (params?.sort) search.set("sort", params.sort);
   if (params?.sortDirection) search.set("sortDirection", params.sortDirection);
   const qs = search.toString();
-  const res = await slashFetch(`/invoice${qs ? `?${qs}` : ""}`, apiKey);
+  const res = await slashFetch(`/invoice${qs ? `?${qs}` : ""}`, apiKey, {
+    legalEntityId: params?.legalEntityId,
+  });
   return res.json();
 }
 
-export async function getInvoice(apiKey: string, invoiceId: string) {
-  const res = await slashFetch(`/invoice/${invoiceId}`, apiKey);
+export async function getInvoice(
+  apiKey: string,
+  invoiceId: string,
+  params?: { legalEntityId?: string }
+) {
+  const res = await slashFetch(`/invoice/${invoiceId}`, apiKey, {
+    legalEntityId: params?.legalEntityId,
+  });
   return res.json();
 }
 
@@ -159,16 +174,23 @@ export async function createInvoice(
       memo?: string;
       version: number;
     };
-  }
+  },
+  params?: { legalEntityId?: string }
 ) {
   const res = await slashFetch("/invoice", apiKey, {
     method: "POST",
+    legalEntityId: params?.legalEntityId,
     body: JSON.stringify(data),
   });
   return res.json();
 }
 
-export async function getInvoiceSettings(apiKey: string) {
-  const res = await slashFetch("/invoice/settings", apiKey);
+export async function getInvoiceSettings(
+  apiKey: string,
+  params?: { legalEntityId?: string }
+) {
+  const res = await slashFetch("/invoice/settings", apiKey, {
+    legalEntityId: params?.legalEntityId,
+  });
   return res.json();
 }

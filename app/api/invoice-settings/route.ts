@@ -20,7 +20,9 @@ export async function GET() {
       );
     }
 
-    const data = await getInvoiceSettings(apiKey);
+    const data = await getInvoiceSettings(apiKey, {
+      legalEntityId: user.legalEntityId || undefined,
+    });
     return NextResponse.json(data);
   } catch (error: unknown) {
     return upstreamError(error, "Failed to fetch invoice settings");

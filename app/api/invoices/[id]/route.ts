@@ -29,7 +29,9 @@ export async function GET(
     }
 
     const { id } = await params;
-    const data = await getInvoice(apiKey, id);
+    const data = await getInvoice(apiKey, id, {
+      legalEntityId: user.legalEntityId || undefined,
+    });
 
     if (!isRecord(data)) {
       return NextResponse.json(data);
