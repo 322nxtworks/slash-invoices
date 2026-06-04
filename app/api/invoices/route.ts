@@ -9,8 +9,6 @@ import {
 import {
   listInvoices,
   createInvoice,
-  getInvoiceSettings,
-  KNOWN_INVOICE_PAYMENT_METHODS,
   type InvoicePaymentMethod,
   type InvoicePaymentMethodType,
 } from "@/lib/slash-api";
@@ -36,73 +34,10 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
-function isKnownPaymentMethod(
-  value: unknown
-): value is InvoicePaymentMethodType {
-  return (
-    typeof value === "string" &&
-    KNOWN_INVOICE_PAYMENT_METHODS.includes(value as InvoicePaymentMethodType)
-  );
-}
-
-function parsePaymentMethodList(value: unknown): InvoicePaymentMethod[] {
-  if (!Array.isArray(value)) return [];
-
-  const parsed: InvoicePaymentMethod[] = [];
-  for (const item of value) {
-    if (!isRecord(item) || !isKnownPaymentMethod(item.method)) continue;
-
-    const method: InvoicePaymentMethod = {
-      method: item.method,
-      config: {},
-    };
-    if (isRecord(item.config) && typeof item.config.passFeeToPayer === "boolean") {
-      method.config.passFeeToPayer = item.config.passFeeToPayer;
-    }
-    parsed.push(method);
-  }
-  return parsed;
-}
-
-function extractInvoicePaymentMethods(settingsData: unknown): InvoicePaymentMethod[] {
-  if (!isRecord(settingsData)) return [];
-
-  const candidates: unknown[] = [settingsData.paymentMethods];
-
-  if (isRecord(settingsData.settings)) {
-    candidates.push(settingsData.settings.paymentMethods);
-    candidates.push(settingsData.settings.defaultPaymentMethods);
-  }
-  if (isRecord(settingsData.invoiceSettings)) {
-    candidates.push(settingsData.invoiceSettings.paymentMethods);
-    if (isRecord(settingsData.invoiceSettings.settings)) {
-      candidates.push(settingsData.invoiceSettings.settings.paymentMethods);
-      candidates.push(settingsData.invoiceSettings.settings.defaultPaymentMethods);
-    }
-  }
-
-  const deduped = new Map<InvoicePaymentMethodType, InvoicePaymentMethod>();
-  for (const candidate of candidates) {
-    for (const method of parsePaymentMethodList(candidate)) {
-      deduped.set(method.method, method);
-    }
-  }
-
-  return Array.from(deduped.values());
-}
-
-function buildInvoicePaymentMethods(
-  settingsData: unknown,
-  includeCrypto: boolean
-): InvoicePaymentMethod[] {
-  const configured = extractInvoicePaymentMethods(settingsData);
-  const withoutCrypto = configured.filter(
-    (method) => method.method !== CRYPTO_PAYMENT_METHOD
-  );
-  const baseMethods: InvoicePaymentMethod[] =
-    withoutCrypto.length > 0
-      ? withoutCrypto
-      : [{ method: DEFAULT_NON_CRYPTO_PAYMENT_METHOD, config: {} }];
+function buildInvoicePaymentMethods(includeCrypto: boolean): InvoicePaymentMethod[] {
+  const baseMethods: InvoicePaymentMethod[] = [
+    { method: DEFAULT_NON_CRYPTO_PAYMENT_METHOD, config: {} },
+  ];
 
   if (!includeCrypto) {
     return baseMethods;
@@ -247,14 +182,10 @@ export async function POST(req: Request) {
       return badRequest("Tax must be between 0 and 100");
     }
 
-    const invoiceSettings = await getInvoiceSettings(apiKey).catch(() => null);
     const data = await createInvoice(apiKey, {
       accountId: user.accountId,
       legalEntityContactId: normalizedContactId,
-      paymentMethods: buildInvoicePaymentMethods(
-        invoiceSettings,
-        normalizedIncludeCrypto
-      ),
+      paymentMethods: buildInvoicePaymentMethods(normalizedIncludeCrypto),
       details: {
         issuedAt: normalizedIssuedAt,
         dueAt: normalizedDueAt,
